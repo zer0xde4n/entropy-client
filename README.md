@@ -1,8 +1,6 @@
-# Mango v3 Client Library
+# Entropy Markets Client Library
 
-JavaScript client library for interacting with Mango Markets DEX v3.
-
-[API Documentation](https://blockworks-foundation.github.io/mango-client-v3/)
+Typescript client library for interacting with Entropy Markets, inspired by Mango Markets
 
 ## Installation
 
