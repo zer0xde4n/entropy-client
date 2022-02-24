@@ -1,0 +1,5 @@
+node_modules
+lib
+.env 
+
+market-maker-ts/node_modules
