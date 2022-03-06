@@ -29,7 +29,7 @@ import { PROGRAM_LAYOUT_VERSIONS } from '@project-serum/serum/lib/tokens_and_mar
 require('dotenv').config({ path: '../.env' });
 
 let lastRootBankCacheUpdate = 0;
-const groupName = process.env.GROUP || 'devnet.2';
+const groupName = process.env.GROUP || 'mainnet.1';
 const updateCacheInterval = parseInt(
   process.env.UPDATE_CACHE_INTERVAL || '3000',
 );
@@ -47,7 +47,7 @@ const consumeEventsLimit = new BN(process.env.CONSUME_EVENTS_LIMIT || '10');
 const consumeEvents = process.env.CONSUME_EVENTS
   ? process.env.CONSUME_EVENTS === 'true'
   : true;
-const cluster = (process.env.CLUSTER || 'devnet') as Cluster;
+const cluster = (process.env.CLUSTER || 'mainnet') as Cluster;
 const config = new Config(configFile);
 const groupIds = config.getGroup(cluster, groupName);
 
@@ -55,15 +55,16 @@ if (!groupIds) {
   throw new Error(`Group ${groupName} not found`);
 }
 const mangoProgramId = groupIds.mangoProgramId;
+console.log("PROGRAM ID: ", mangoProgramId.toString())
 const mangoGroupKey = groupIds.publicKey;
-const payerJsonFile =  fs.readFileSync(process.env.KEYPAIR || (os.homedir() + '/.config/solana/entropy-devnet-authority.json'), 'utf-8');
+const payerJsonFile =  fs.readFileSync(process.env.KEYPAIR || (os.homedir() + '/.config/solana/entropy-mainnet-authority.json'), 'utf-8');
 const payer = new Account(
   JSON.parse(
     payerJsonFile
   ),
 );
 const connection = new Connection(
-  process.env.DEVNET_ENDPOINT_URL || config.cluster_urls[cluster],
+  config.cluster_urls[cluster],
   'processed' as Commitment,
 );
 console.log("DEVNET RPC: ", process.env.DEVNET_ENDPOINT_URL)

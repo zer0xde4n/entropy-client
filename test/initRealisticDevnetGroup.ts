@@ -6,65 +6,51 @@
  */
 
 
-const newGroupName = 'devnet.2';
-const mangoProgramId = '4AFs3w5V5J9bDLEcNMEobdG3W4NYmXFgTe4KS41HBKqa';
-const serumProgramId = 'DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY';
-const feesVault = '7xxohuHBfqDH1aAtMmrepkSDBA4RpHNG77weJw22ebBh'; // devnet vault owned by thiccy
+const newGroupName = 'mainnet.1';
+const entropyProgramId = 'FcfzrnurPFXwxbx332wScnD5P86DwhpLpBbQsnr6LcH5';
+const serumProgramId = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin';
+const feesVault = 'GWFVVXwN8Xdb1NdoP5M59HiNWo2zkHyYUZ7dwwNHz6EE'; // token address of USDC owned by thiccy
 
 const FIXED_IDS: any[] = [
   {
+    symbol: 'BTC^2',
+    decimals: 6,
+    baseLot: 100,
+    quoteLot: 10,
+    oracleProvider: 'switchboard',
+    oracle: "74YzQPGUT9VnjrBz8MuyDLKgKpbDqGot5xZJvTtMi6Ng",
+    mint: '4Yi8HN43u57tbbmX2PU7Sz77uH1b5ZwGmDKvary9ApD3',
+    initLeverage: 1,
+    maintLeverage: 1.05,
+    liquidationFee: 0.10,
+  },  
+  {
     symbol: 'USDC',
     decimals: 6,
-    mint: 'EDAgjAqGP39wRLZ4yqWJyNb1AExbzcvX12zNe9b89b9G',
+    mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   },
-  {
-    symbol: 'BTC',
-    decimals: 6,
-    baseLot: 100,
-    quoteLot: 10,
-    oracleProvider: 'switchboard',
-    mint: '3UNBZ6o52WTWwjac2kPUb4FyodhU1vFkRJheu1Sh2TvU',
-  },
-  {
-    symbol: 'ETH',
-    decimals: 6,
-    baseLot: 100,
-    quoteLot: 10,
-    oracleProvider: 'pyth',
-    mint: 'Cu84KB3tDL6SbFgToHMLYVDJJXdJjenNzSKikeAvzmkA',
-  },
-  {
-    symbol: 'SOL',
-    decimals: 9,
-    baseLot: 10000,
-    quoteLot: 100,
-    oracleProvider: 'switchboard',
-    mint: 'So11111111111111111111111111111111111111112',
-  },
-  {
-    symbol: 'SOL2',
-    decimals: 6,
-    baseLot: 100,
-    quoteLot: 10,
-    oracleProvider: 'switchboard',
-    oracle: "83jN7eN5wUBsTAZ7tMrmpQxw6qQfTD8FrpuYS32hZBqT",
-    mint: '5B25p1NgAZYLS7gPg6qd2d7s8gANt6749ASSiTXL38Uv',
-    initLeverage: 1.25,
-    maintLeverage: 2.5,
-    liquidationFee: 0.10,
-  },
-  {
-    symbol: 'GVOL7D',
-    decimals: 9,
-    baseLot: 10000,
-    quoteLot: 100,
-    oracleProvider: 'switchboard',
-    oracle: "CX1PvW4qUDy4PPq8egnMVCbVJt8TcPCt7WCZuwmvCfo7",
-    mint: '5B25p1NgAZYLS7gPg6qd2d7s8gANt6749ASSiTXL38Uv',
-    initLeverage: 1.25,
-    maintLeverage: 2.5,
-    liquidationFee: 0.10,
-  }
+  // {
+  //   symbol: 'BTC',
+  //   decimals: 6,
+  //   baseLot: 100,
+  //   quoteLot: 10,
+  //   oracleProvider: 'pyth',
+  //   mint: '4Yi8HN43u57tbbmX2PU7Sz77uH1b5ZwGmDKvary9ApD3',
+  //   initLeverage: 1.5,
+  //   maintLeverage: 2,
+  // },
+  // {
+  //   symbol: 'BTC_1D_IV',
+  //   decimals: 9,
+  //   baseLot: 10000,
+  //   quoteLot: 100,
+  //   oracleProvider: 'switchboard',
+  //   oracle: "6nkKqyx8fU1MyUHqY6UBMc17ib4U6BzWSeyP24YBFoWN",
+  //   mint: '5CzFkazo1iWqLFMoDSw2RSo6u5Z1fqPDwdsGMczoGBQ6',
+  //   initLeverage: 1.5,
+  //   maintLeverage: 2,
+  //   liquidationFee: 0.10,
+  // }
 ];
 
 const initNewGroup = async () => {
@@ -74,10 +60,10 @@ const initNewGroup = async () => {
   const quoteMint = FIXED_IDS.find((id) => id.symbol === 'USDC')
     ?.mint as string;
   
-  console.log("YEA WE'RE ABOUT TO INITIALIZE THE GROUP")
+  console.log("About to initialize group...")
 
   await execCommand(
-    `yarn cli init-group ${newGroupName} ${mangoProgramId} ${serumProgramId} ${quoteMint} ${feesVault}`,
+    `yarn cli init-group ${newGroupName} ${entropyProgramId} ${serumProgramId} ${quoteMint} ${feesVault}`,
   );
   console.log(`new group initialized`);
   for (let i = 0; i < FIXED_IDS.length; i++) {
@@ -120,7 +106,7 @@ const initNewGroup = async () => {
     //   );
     // }
 
-    if (fids.symbol === 'BTC' || fids.symbol === 'SOL' || fids.symbol === 'SOL2' || fids.symbol === 'GVOL7D' || fids.symbol == 'ETH') {
+    if (fids.symbol === 'BTC' || fids.symbol === 'SOL' || fids.symbol === 'SOL2' || fids.symbol === 'GVOL7D' || fids.symbol == 'ETH' || fids.symbol == "BTC_1D_IV" || fids.symbol == "BTC^2") {
       console.log(`adding ${fids.symbol} perp market`);
       await execCommand(
         `yarn cli add-perp-market ${newGroupName} ${

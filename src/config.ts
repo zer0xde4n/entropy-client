@@ -5,8 +5,8 @@ import { zeroKey } from './utils';
 export type Cluster = 'devnet' | 'mainnet' | 'localnet' | 'testnet';
 
 export const msrmMints = {
-  devnet: new PublicKey('8DJBo4bF4mHNxobjdax3BL9RMh5o71Jf8UiKsf5C5eVH'),
-  mainnet: new PublicKey('MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L'),
+  devnet: zeroKey,
+  mainnet: zeroKey,
   localnet: zeroKey,
   testnet: zeroKey,
 };
