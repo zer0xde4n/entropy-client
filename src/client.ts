@@ -304,7 +304,7 @@ export class MangoClient {
             if (line.startsWith('Program log: ')) {
               throw new MangoError({
                 message:
-                  'Transaction fai led: ' + line.slice('Program log: '.length),
+                  'Transaction failed: ' + line.slice('Program log: '.length),
                 txid,
               });
             }
@@ -321,6 +321,7 @@ export class MangoClient {
     }
 
     console.log(new Date().toUTCString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
+    console.log("Why is there no newline");
     return txid;
   }
 
