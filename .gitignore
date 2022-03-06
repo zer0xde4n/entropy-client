@@ -3,3 +3,4 @@ lib
 .env 
 
 market-maker-ts/node_modules
+test-ledger/faucet-keypair.json
