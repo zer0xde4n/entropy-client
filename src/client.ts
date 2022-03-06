@@ -143,6 +143,7 @@ export class MangoClient {
     if (opts.postSendTxCallback) {
       this.postSendTxCallback = opts.postSendTxCallback;
     }
+    // console.log("Program Id from client.ts")
   }
 
   async sendTransactions(
@@ -272,7 +273,7 @@ export class MangoClient {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {
         await sleep(retrySleep);
-        // console.log(new Date().toUTCString(), ' sending tx ', txid);
+        console.log(new Date().toUTCString(), ' sending tx ', txid);
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
@@ -308,7 +309,7 @@ export class MangoClient {
             if (line.startsWith('Program log: ')) {
               throw new MangoError({
                 message:
-                  'Transaction failed: ' + line.slice('Program log: '.length),
+                  'Transaction fai led: ' + line.slice('Program log: '.length),
                 txid,
               });
             }

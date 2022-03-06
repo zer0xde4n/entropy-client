@@ -23,7 +23,7 @@ async function testStopLoss() {
   const payer = new Account(
     JSON.parse(
       process.env.KEYPAIR ||
-      fs.readFileSync(os.homedir() + '/.config/solana/entropy-devnet-authority.json', 'utf-8'),
+      fs.readFileSync(os.homedir() + '/.config/solana/entropy-mainnet-authority.json', 'utf-8'),
     ),
   );
   const connection = new Connection(

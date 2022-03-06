@@ -175,7 +175,7 @@ const FIXED_IDS = [
 const connection = createDevnetConnection();
 
 const authorityFp =
-  process.env.AUTHORITY || os.homedir() + '/.config/solana/entropy-devnet-authority.json';
+  process.env.AUTHORITY || os.homedir() + '/.config/solana/entropy-mainnet-authority.json';
 const authority = new Account(
   JSON.parse(fs.readFileSync(authorityFp, 'utf-8')),
 );

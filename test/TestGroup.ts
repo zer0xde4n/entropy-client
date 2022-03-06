@@ -144,7 +144,7 @@ export default class TestGroup {
       JSON.parse(
         process.env.KEYPAIR ||
           fs.readFileSync(
-            os.homedir() + '/.config/solana/entropy-devnet-authority.json',
+            os.homedir() + '/.config/solana/entropy-mainnet-authority.json',
             'utf-8',
           ),
       ),

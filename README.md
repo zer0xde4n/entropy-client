@@ -1,19 +1,19 @@
 # Entropy Markets Client Library
 
-Typescript client library for interacting with Entropy Markets, inspired by Mango Markets
+Typescript client library for interacting with Entropy Markets, inspired by Mango Markets.
 
 ## Installation
 
 Using npm:
 
 ```
-npm install @blockworks-foundation/mango-client
+npm install 
 ```
 
 Using yarn:
 
 ```
-yarn add @blockworks-foundation/mango-client
+yarn add 
 ```
 
 ## Usage Example

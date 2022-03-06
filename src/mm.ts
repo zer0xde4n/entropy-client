@@ -48,7 +48,7 @@ async function mm() {
   const payer = new Account(
     JSON.parse(
       fs.readFileSync(
-        process.env.KEYPAIR || os.homedir() + '/.config/solana/entropy-devnet-authority.json',
+        process.env.KEYPAIR || os.homedir() + '/.config/solana/entropy-mainnet-authority.json',
         'utf-8',
       ),
     ),

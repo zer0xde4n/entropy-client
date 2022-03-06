@@ -73,7 +73,7 @@ const payer = new Account(
   JSON.parse(
     process.env.PRIVATE_KEY ||
       fs.readFileSync(
-        process.env.KEYPAIR || os.homedir() + '/.config/solana/entropy-devnet-authority.json',
+        process.env.KEYPAIR || os.homedir() + '/.config/solana/entropy-mainnet-authority.json',
         'utf-8',
       ),
   ),

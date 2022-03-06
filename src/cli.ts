@@ -38,7 +38,7 @@ const clusterDesc: [string, Options] = [
   'cluster',
   {
     describe: 'the cluster to connect to',
-    default: 'devnet',
+    default: 'mainnet',
     choices: ['devnet', 'mainnet'],
   },
 ];
@@ -55,7 +55,7 @@ const keypairDesc: [string, Options] = [
   'keypair',
   {
     describe: 'the keypair used to sign all transactions',
-    default: os.homedir() + '/.config/solana/entropy-devnet-authority.json',
+    default: os.homedir() + '/.config/solana/entropy-mainnet-authority.json',
     type: 'string',
   },
 ];
@@ -127,7 +127,7 @@ yargs(hideBin(process.argv)).command(
       })
       .option('valid_interval', {
         describe: 'the interval where caches are no longer valid',
-        default: 10,
+        default: 15,
         type: 'number',
       })
       .option('symbol', {
@@ -332,6 +332,7 @@ yargs(hideBin(process.argv)).command(
     const account = readKeypair(args.keypair as string);
     const config = readConfig(args.config as string);
     const cluster = args.cluster as Cluster;
+    console.log("cluster: ", cluster);
     const connection = openConnection(config, cluster);
     const group = config.getGroup(cluster, args.group as string) as GroupConfig;
     const result = await addPerpMarket(
@@ -406,7 +407,7 @@ yargs(hideBin(process.argv)).command(
         describe: 'optimal interest rate param',
         default: 0.06,
         type: 'number',
-      })
+      })    
       .option('max_rate', {
         describe: 'max interest rate param',
         default: 1.5,
@@ -422,6 +423,8 @@ yargs(hideBin(process.argv)).command(
     const account = readKeypair(args.keypair as string);
     const config = readConfig(args.config as string);
     const cluster = args.cluster as Cluster;
+    console.log("cluster: ", cluster);
+    // console.log()
     const connection = openConnection(config, cluster);
     const group = config.getGroup(cluster, args.group as string) as GroupConfig;
     const quoteMintPk = getTokenBySymbol(group, group.quoteSymbol)

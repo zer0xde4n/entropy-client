@@ -58,6 +58,8 @@ export default async function addPerpMarket(
   //   }
   // }
 
+  console.log('running addPerpMarket');
+
   await client.addPerpMarket(
     group,
     oracleDesc.publicKey,
@@ -78,9 +80,10 @@ export default async function addPerpMarket(
     exp,
   );
 
+  console.log('done');
   group = await client.getMangoGroup(groupConfig.publicKey);
   const marketPk = group.perpMarkets[marketIndex].perpMarket;
-
+  console.log("cluster: ", groupConfig.cluster);
   let baseDecimals: number;
   try {
     baseDecimals = getTokenBySymbol(groupConfig, symbol)
