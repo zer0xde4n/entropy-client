@@ -232,6 +232,7 @@ export class MangoClient {
     additionalSigners: Account[],
     timeout: number | null = 30000,
     confirmLevel: TransactionConfirmationStatus = 'processed',
+    marketName: string | null = ""
   ): Promise<TransactionSignature> {
     await this.signTransaction({
       transaction,
@@ -251,7 +252,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(new Date().toISOString(), `postSendTxCallback error ${e}`);
+        console.log(new Date().toISOString(), `${marketName} postSendTxCallback error ${e}`);
       }
     }
 
@@ -259,7 +260,7 @@ export class MangoClient {
 
     if (!timeout) return txid;
 
-    console.log(new Date().toISOString(), 'Started awaiting confirmation for txid: ',txid,' size:', rawTransaction.length);
+    console.log(new Date().toISOString(), `${marketName} Started awaiting confirmation for txid: `,txid,' size:', rawTransaction.length);
 
     let done = false;
 
@@ -268,7 +269,7 @@ export class MangoClient {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {
         await sleep(retrySleep);
-        console.log(new Date().toISOString(), ' sending tx ', txid);
+        console.log(new Date().toISOString(), `${marketName}: sending tx `, txid);
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
@@ -304,7 +305,7 @@ export class MangoClient {
             if (line.startsWith('Program log: ')) {
               throw new MangoError({
                 message:
-                new Date().toISOString() + 'Transaction failed: ' + line.slice('Program log: '.length),
+                new Date().toISOString() + `${marketName} Transaction failed: ` + line.slice('Program log: '.length),
                 txid,
               });
             }
@@ -321,7 +322,7 @@ export class MangoClient {
       done = true;
     }
 
-    console.log(new Date().toISOString(), ' Transaction Latency for txid: ', txid, getUnixTs() - startTime);
+    console.log(new Date().toISOString(), `${marketName} Transaction Latency for txid: `, txid, getUnixTs() - startTime);
     return txid;
   }
 
@@ -329,6 +330,7 @@ export class MangoClient {
     signedTransaction,
     timeout = 30000,
     confirmLevel = 'processed',
+    marketName = "",
   }: {
     signedTransaction: Transaction;
     timeout?: number;
@@ -348,7 +350,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(new Date().toISOString(), `postSendTxCallback error ${e}`);
+        console.log(new Date().toISOString(), `${marketName} postSendTxCallback error ${e}`);
       }
     }
 
@@ -409,7 +411,7 @@ export class MangoClient {
       done = true;
     }
 
-    console.log(new Date().toISOString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
+    console.log(new Date().toISOString(), `${marketName} Transaction Latency for txid: `, txid, getUnixTs() - startTime);
     return txid;
   }
 
