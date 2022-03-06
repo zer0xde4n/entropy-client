@@ -315,7 +315,8 @@ export class MangoClient {
           txid,
         });
       }
-      throw new MangoError({ message: new Date().toUTCString() + 'Transaction failed' + txid });
+      throw new MangoError({ message: new Date().toUTCString() + 'Transaction failed' + txid.toString()
+     });
     } finally {
       done = true;
     }
