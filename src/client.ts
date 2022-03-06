@@ -176,7 +176,7 @@ export class MangoClient {
     }
 
     if (payer?.connected) {
-      console.log('signing as wallet', payer.publicKey);
+      console.log(new Date().toUTCString(), 'signing as wallet', payer.publicKey);
       return await payer.signTransaction(transaction);
     } else {
       transaction.sign(...[payer].concat(signers));
@@ -251,7 +251,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(`postSendTxCallback error ${e}`);
+        console.log(new Date().toUTCString(), `postSendTxCallback error ${e}`);
       }
     }
 
@@ -259,12 +259,12 @@ export class MangoClient {
 
     if (!timeout) return txid;
 
-    // console.log(
-    //   'Started awaiting confirmation for',
-    //   txid,
-    //   'size:',
-    //   rawTransaction.length,
-    // );
+    console.log(new Date().toUTCString(), 
+      'Started awaiting confirmation for tx: ',
+      txid,
+      ' size:',
+      rawTransaction.length,
+    );
 
     let done = false;
 
@@ -352,7 +352,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(`postSendTxCallback error ${e}`);
+        console.log(new Date().toUTCString(), `postSendTxCallback error ${e}`);
       }
     }
 
@@ -388,7 +388,7 @@ export class MangoClient {
           )
         ).value;
       } catch (e) {
-        console.log('Simulate tx failed');
+        console.log(new Date().toUTCString(), 'Simulate tx failed');
       }
       if (simulateResult && simulateResult.err) {
         if (simulateResult.logs) {
@@ -442,7 +442,7 @@ export class MangoClient {
             return;
           }
           done = true;
-          console.log('Timed out for txid: ', txid);
+          console.log(new Date().toUTCString(), 'Timed out for txid: ', txid);
           reject({ timeout: true });
         }, timeout);
         try {
@@ -462,7 +462,7 @@ export class MangoClient {
           );
         } catch (e) {
           done = true;
-          console.log('WS error in setup', txid, e);
+          console.log(new Date().toUTCString(), 'WS error in setup', txid, e);
         }
         let retrySleep = 200;
         while (!done) {
@@ -479,7 +479,7 @@ export class MangoClient {
                 if (!result) {
                   // console.log('REST null result for', txid, result);
                 } else if (result.err) {
-                  console.log('REST error for', txid, result);
+                  console.log(new Date().toUTCString(), 'REST error for', txid, result);
                   done = true;
                   reject(result.err);
                 } else if (
@@ -488,7 +488,7 @@ export class MangoClient {
                     confirmLevels.includes(result.confirmationStatus)
                   )
                 ) {
-                  console.log('REST not confirmed', txid, result);
+                  console.log(new Date().toUTCString(), 'REST not confirmed', txid, result);
                 } else {
                   this.lastSlot = response?.context?.slot;
                   // console.log('REST confirmed', txid, result);
@@ -498,7 +498,7 @@ export class MangoClient {
               }
             } catch (e) {
               if (!done) {
-                console.log('REST connection error: txid', txid, e);
+                console.log(new Date().toUTCString(), 'REST connection error: txid', txid, e);
               }
             }
           })();
@@ -511,7 +511,7 @@ export class MangoClient {
 
     if (subscriptionId) {
       this.connection.removeSignatureListener(subscriptionId).catch((e) => {
-        console.log('WS error in cleanup', e);
+        console.log(new Date().toUTCString(), 'WS error in cleanup', e);
       });
     }
 
@@ -1668,7 +1668,7 @@ export class MangoClient {
     transaction.add(placeOrderInstruction);
 
     if (spotMarketIndex > 0) {
-      console.log(
+      console.log(new Date().toUTCString(), 
         spotMarketIndex - 1,
         mangoAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
@@ -1685,7 +1685,7 @@ export class MangoClient {
     mangoAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
     mangoAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(
+    console.log(new Date().toUTCString(), 
       spotMarketIndex,
       mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
@@ -1882,7 +1882,7 @@ export class MangoClient {
     // and if it failed then we already exited before this line
     mangoAccount.spotOpenOrders[spotMarketIndex] = marketOpenOrdersKey;
     mangoAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(
+    console.log(new Date().toUTCString(), 
       spotMarketIndex,
       mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       marketOpenOrdersKey.toBase58(),
@@ -3427,7 +3427,7 @@ export class MangoClient {
     transaction.add(placeOrderInstruction);
 
     if (spotMarketIndex > 0) {
-      console.log(
+      console.log(new Date().toUTCString(), 
         spotMarketIndex - 1,
         mangoAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
@@ -3443,7 +3443,7 @@ export class MangoClient {
     mangoAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
     mangoAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(
+    console.log(new Date().toUTCString(), 
       spotMarketIndex,
       mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
@@ -3570,7 +3570,7 @@ export class MangoClient {
         this.programId,
       );
 
-      console.log('AdvancedOrders PDA:', advancedOrders.toBase58());
+      console.log(new Date().toUTCString(), 'AdvancedOrders PDA:', advancedOrders.toBase58());
 
       transaction.add(
         makeInitAdvancedOrdersInstruction(
