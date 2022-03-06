@@ -176,7 +176,7 @@ export class MangoClient {
     }
 
     if (payer?.connected) {
-      console.log(new Date().toUTCString(), 'signing as wallet', payer.publicKey);
+      console.log(new Date().toISOString(), 'signing as wallet', payer.publicKey);
       return await payer.signTransaction(transaction);
     } else {
       transaction.sign(...[payer].concat(signers));
@@ -251,7 +251,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(new Date().toUTCString(), `postSendTxCallback error ${e}`);
+        console.log(new Date().toISOString(), `postSendTxCallback error ${e}`);
       }
     }
 
@@ -259,7 +259,7 @@ export class MangoClient {
 
     if (!timeout) return txid;
 
-    console.log(new Date().toUTCString(), 'Started awaiting confirmation for txid: ',txid,' size:', rawTransaction.length);
+    console.log(new Date().toISOString(), 'Started awaiting confirmation for txid: ',txid,' size:', rawTransaction.length);
 
     let done = false;
 
@@ -268,7 +268,7 @@ export class MangoClient {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {
         await sleep(retrySleep);
-        console.log(new Date().toUTCString(), ' sending tx ', txid);
+        console.log(new Date().toISOString(), ' sending tx ', txid);
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
@@ -304,7 +304,7 @@ export class MangoClient {
             if (line.startsWith('Program log: ')) {
               throw new MangoError({
                 message:
-                new Date().toUTCString() + 'Transaction failed: ' + line.slice('Program log: '.length),
+                new Date().toISOString() + 'Transaction failed: ' + line.slice('Program log: '.length),
                 txid,
               });
             }
@@ -315,13 +315,13 @@ export class MangoClient {
           txid,
         });
       }
-      throw new MangoError({ message: new Date().toUTCString() + 'Transaction failed', txid
+      throw new MangoError({ message: new Date().toISOString() + ' Transaction failed', txid
      });
     } finally {
       done = true;
     }
 
-    console.log(new Date().toUTCString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
+    console.log(new Date().toISOString(), ' Transaction Latency for txid: ', txid, getUnixTs() - startTime);
     return txid;
   }
 
@@ -348,7 +348,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(new Date().toUTCString(), `postSendTxCallback error ${e}`);
+        console.log(new Date().toISOString(), `postSendTxCallback error ${e}`);
       }
     }
 
@@ -384,7 +384,7 @@ export class MangoClient {
           )
         ).value;
       } catch (e) {
-        console.log(new Date().toUTCString(), 'Simulate tx failed');
+        console.log(new Date().toISOString(), 'Simulate tx failed');
       }
       if (simulateResult && simulateResult.err) {
         if (simulateResult.logs) {
@@ -409,7 +409,7 @@ export class MangoClient {
       done = true;
     }
 
-    console.log(new Date().toUTCString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
+    console.log(new Date().toISOString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
     return txid;
   }
 
@@ -438,7 +438,7 @@ export class MangoClient {
             return;
           }
           done = true;
-          console.log(new Date().toUTCString(), 'Timed out for txid: ', txid);
+          console.log(new Date().toISOString(), 'Timed out for txid: ', txid);
           reject({ timeout: true });
         }, timeout);
         try {
@@ -458,7 +458,7 @@ export class MangoClient {
           );
         } catch (e) {
           done = true;
-          console.log(new Date().toUTCString(), 'WS error in setup', txid, e);
+          console.log(new Date().toISOString(), 'WS error in setup', txid, e);
         }
         let retrySleep = 200;
         while (!done) {
@@ -475,7 +475,7 @@ export class MangoClient {
                 if (!result) {
                   // console.log('REST null result for', txid, result);
                 } else if (result.err) {
-                  console.log(new Date().toUTCString(), 'REST error for', txid, result);
+                  console.log(new Date().toISOString(), 'REST error for', txid, result);
                   done = true;
                   reject(result.err);
                 } else if (
@@ -484,7 +484,7 @@ export class MangoClient {
                     confirmLevels.includes(result.confirmationStatus)
                   )
                 ) {
-                  console.log(new Date().toUTCString(), 'REST not confirmed', txid, result);
+                  console.log(new Date().toISOString(), 'REST not confirmed', txid, result);
                 } else {
                   this.lastSlot = response?.context?.slot;
                   // console.log('REST confirmed', txid, result);
@@ -494,7 +494,7 @@ export class MangoClient {
               }
             } catch (e) {
               if (!done) {
-                console.log(new Date().toUTCString(), 'REST connection error: txid', txid, e);
+                console.log(new Date().toISOString(), 'REST connection error: txid', txid, e);
               }
             }
           })();
@@ -507,7 +507,7 @@ export class MangoClient {
 
     if (subscriptionId) {
       this.connection.removeSignatureListener(subscriptionId).catch((e) => {
-        console.log(new Date().toUTCString(), 'WS error in cleanup', e);
+        console.log(new Date().toISOString(), 'WS error in cleanup', e);
       });
     }
 
@@ -1664,7 +1664,7 @@ export class MangoClient {
     transaction.add(placeOrderInstruction);
 
     if (spotMarketIndex > 0) {
-      console.log(new Date().toUTCString(), 
+      console.log(new Date().toISOString(), 
         spotMarketIndex - 1,
         mangoAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
@@ -1681,7 +1681,7 @@ export class MangoClient {
     mangoAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
     mangoAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(new Date().toUTCString(), 
+    console.log(new Date().toISOString(), 
       spotMarketIndex,
       mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
@@ -1878,7 +1878,7 @@ export class MangoClient {
     // and if it failed then we already exited before this line
     mangoAccount.spotOpenOrders[spotMarketIndex] = marketOpenOrdersKey;
     mangoAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(new Date().toUTCString(), 
+    console.log(new Date().toISOString(), 
       spotMarketIndex,
       mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       marketOpenOrdersKey.toBase58(),
@@ -3423,7 +3423,7 @@ export class MangoClient {
     transaction.add(placeOrderInstruction);
 
     if (spotMarketIndex > 0) {
-      console.log(new Date().toUTCString(), 
+      console.log(new Date().toISOString(), 
         spotMarketIndex - 1,
         mangoAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
@@ -3439,7 +3439,7 @@ export class MangoClient {
     mangoAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
     mangoAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(new Date().toUTCString(), 
+    console.log(new Date().toISOString(), 
       spotMarketIndex,
       mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
@@ -3566,7 +3566,7 @@ export class MangoClient {
         this.programId,
       );
 
-      console.log(new Date().toUTCString(), 'AdvancedOrders PDA:', advancedOrders.toBase58());
+      console.log(new Date().toISOString(), 'AdvancedOrders PDA:', advancedOrders.toBase58());
 
       transaction.add(
         makeInitAdvancedOrdersInstruction(

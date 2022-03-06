@@ -147,7 +147,7 @@ export async function awaitTransactionSignatureConfirmation(
           return;
         }
         done = true;
-        console.log(new Date().toUTCString(), 'Timed out for txid', txid);
+        console.log(new Date().toISOString(), 'Timed out for txid', txid);
         reject({ timeout: true });
       }, timeout);
       try {
@@ -167,7 +167,7 @@ export async function awaitTransactionSignatureConfirmation(
         // console.log('Set up WS connection', txid);
       } catch (e) {
         done = true;
-        console.log(new Date().toUTCString(), 'WS error in setup', txid, e);
+        console.log(new Date().toISOString(), 'WS error in setup', txid, e);
       }
       while (!done) {
         // eslint-disable-next-line no-loop-func
@@ -181,7 +181,7 @@ export async function awaitTransactionSignatureConfirmation(
               if (!result) {
                 // console.log('REST null result for', txid, result);
               } else if (result.err) {
-                console.log(new Date().toUTCString(), 'REST error for', txid, result);
+                console.log(new Date().toISOString(), 'REST error for', txid, result);
                 done = true;
                 reject(result.err);
               } else if (
@@ -190,7 +190,7 @@ export async function awaitTransactionSignatureConfirmation(
                   confirmLevels.includes(result.confirmationStatus)
                 )
               ) {
-                console.log(new Date().toUTCString(), 'REST not confirmed', txid, result);
+                console.log(new Date().toISOString(), 'REST not confirmed', txid, result);
               } else {
                 // console.log('REST confirmed', txid, result);
                 done = true;
@@ -199,7 +199,7 @@ export async function awaitTransactionSignatureConfirmation(
             }
           } catch (e) {
             if (!done) {
-              console.log(new Date().toUTCString(), 'REST connection error: txid', txid, e);
+              console.log(new Date().toISOString(), 'REST connection error: txid', txid, e);
             }
           }
         })();

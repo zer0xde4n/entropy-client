@@ -240,7 +240,7 @@ export default class PerpMarket {
       `openInterest: ${this.openInterest.toString()}`,
       `lastUpdated: ${new Date(
         this.lastUpdated.toNumber() * 1000,
-      ).toUTCString()}`,
+      ).toISOString()}`,
       `seqNum: ${this.seqNum.toString()}`,
       `liquidationFee: ${info.liquidationFee.toString()}`,
       `takerFee: ${info.takerFee.toString()}`,
@@ -257,7 +257,7 @@ export default class PerpMarket {
       `lmSizeShift: ${this.metaData.extraInfo[1]}`,
       `periodStart: ${new Date(
         lmi.periodStart.toNumber() * 1000,
-      ).toUTCString()}`,
+      ).toISOString()}`,
       `targetPeriodLength: ${lmi.targetPeriodLength.toString()}`,
       `mngoLeftInPeriod: ${(lmi.mngoLeft.toNumber() / Math.pow(10, 6)).toFixed(
         2,
@@ -266,7 +266,7 @@ export default class PerpMarket {
         lmi.mngoPerPeriod.toNumber() / Math.pow(10, 6)
       ).toFixed(2)}`,
       `periodProgress: ${progress * 100}%`,
-      `estPeriodEnd: ${new Date(est * 1000).toUTCString()}`,
+      `estPeriodEnd: ${new Date(est * 1000).toISOString()}`,
       `mngoVault: ${this.mngoVault.toString()}`,
     ];
 
