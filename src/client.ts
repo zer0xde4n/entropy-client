@@ -259,12 +259,7 @@ export class MangoClient {
 
     if (!timeout) return txid;
 
-    console.log(new Date().toUTCString(), 
-      'Started awaiting confirmation for tx: ',
-      txid,
-      ' size:',
-      rawTransaction.length,
-    );
+    console.log(new Date().toUTCString(), 'Started awaiting confirmation for txid: ',txid,' size:', rawTransaction.length);
 
     let done = false;
 
@@ -325,7 +320,7 @@ export class MangoClient {
       done = true;
     }
 
-    // console.log('Latency', txid, getUnixTs() - startTime);
+    console.log(new Date().toUTCString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
     return txid;
   }
 
@@ -413,7 +408,7 @@ export class MangoClient {
       done = true;
     }
 
-    // console.log('Latency', txid, getUnixTs() - startTime);
+    console.log(new Date().toUTCString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
     return txid;
   }
 
