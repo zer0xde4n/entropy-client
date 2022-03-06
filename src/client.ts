@@ -232,7 +232,7 @@ export class MangoClient {
     additionalSigners: Account[],
     timeout: number | null = 30000,
     confirmLevel: TransactionConfirmationStatus = 'processed',
-    marketName: string | null = ""
+    marketName?: string | null
   ): Promise<TransactionSignature> {
     await this.signTransaction({
       transaction,
@@ -330,7 +330,6 @@ export class MangoClient {
     signedTransaction,
     timeout = 30000,
     confirmLevel = 'processed',
-    marketName = "",
   }: {
     signedTransaction: Transaction;
     timeout?: number;
@@ -350,7 +349,7 @@ export class MangoClient {
       try {
         this.postSendTxCallback({ txid });
       } catch (e) {
-        console.log(new Date().toISOString(), `${marketName} postSendTxCallback error ${e}`);
+        console.log(new Date().toISOString(), `postSendTxCallback error ${e}`);
       }
     }
 
@@ -411,7 +410,7 @@ export class MangoClient {
       done = true;
     }
 
-    console.log(new Date().toISOString(), `${marketName} Transaction Latency for txid: `, txid, getUnixTs() - startTime);
+    console.log(new Date().toISOString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
     return txid;
   }
 
