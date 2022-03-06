@@ -304,7 +304,7 @@ export class MangoClient {
             if (line.startsWith('Program log: ')) {
               throw new MangoError({
                 message:
-                  'Transaction failed: ' + line.slice('Program log: '.length),
+                new Date().toUTCString() + 'Transaction failed: ' + line.slice('Program log: '.length),
                 txid,
               });
             }
@@ -315,13 +315,12 @@ export class MangoClient {
           txid,
         });
       }
-      throw new MangoError({ message: 'Transaction failed', txid });
+      throw new MangoError({ message: new Date().toUTCString(), ' Transaction failed', txid });
     } finally {
       done = true;
     }
 
     console.log(new Date().toUTCString(), 'Transaction Latency for txid: ', txid, getUnixTs() - startTime);
-    console.log("Why is there no newline");
     return txid;
   }
 
