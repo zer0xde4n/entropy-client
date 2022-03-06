@@ -127,13 +127,13 @@ export default class MangoGroup {
     }
   }
   cachePriceToUi(price: I80F48, tokenIndex: number): number {
-    console.log('cache price to ui decimals: ', this.getTokenDecimals(tokenIndex));
-    console.log(QUOTE_INDEX)
-    console.log(this.getTokenDecimals(QUOTE_INDEX))
+    // console.log('cache price to ui decimals: ', this.getTokenDecimals(tokenIndex));
+    // console.log(QUOTE_INDEX)
+    // console.log(this.getTokenDecimals(QUOTE_INDEX))
     const decimalAdj = new Big(10).pow(
       this.getTokenDecimals(tokenIndex) - this.getTokenDecimals(QUOTE_INDEX),
     );
-    console.log(decimalAdj.toString())
+    // console.log(decimalAdj.toString())
     return price.toBig().mul(decimalAdj).toNumber();
   }
 
@@ -193,23 +193,23 @@ export default class MangoGroup {
   async loadRootBanks(
     connection: Connection,
   ): Promise<(RootBank | undefined)[]> {
-    console.log("GOT HERE")
+    // console.log("GOT HERE")
     const rootBankPks = this.tokens
       .map((t) => t.rootBank)
       .filter((rB) => !rB.equals(zeroKey));
     
     
     const rootBankAccts = await getMultipleAccounts(connection, rootBankPks);
-    console.log("GOT HERE")
+    // console.log("GOT HERE")
     const parsedRootBanks = rootBankAccts.map((acc) => {
       const decoded = RootBankLayout.decode(acc.accountInfo.data);
       return new RootBank(acc.publicKey, decoded);
     });
-    console.log("GOT HERE")
+    // console.log("GOT HERE")
     const nodeBankPks = parsedRootBanks.map((bank) =>
       bank.nodeBanks.filter((key) => !key.equals(zeroKey)),
     );
-    console.log("GOT HERE")
+    // console.log("GOT HERE")
     const nodeBankAccts = await getMultipleAccounts(
       connection,
       nodeBankPks.flat(),
