@@ -23,7 +23,7 @@ export class Fetcher {
 
     // defaults to mainnet since there's more going on there
     const cluster = (process.env.CLUSTER || 'mainnet') as Cluster;
-    const groupName = process.env.GROUP || 'mainnet.1';
+    const groupName = process.env.GROUP || 'mainnet.2';
     const groupIds = config.getGroup(cluster, groupName);
 
     if (!groupIds) {

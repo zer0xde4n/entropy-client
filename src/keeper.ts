@@ -29,7 +29,7 @@ import { PROGRAM_LAYOUT_VERSIONS } from '@project-serum/serum/lib/tokens_and_mar
 require('dotenv').config({ path: '../.env' });
 
 let lastRootBankCacheUpdate = 0;
-const groupName = process.env.GROUP || 'mainnet.1';
+const groupName = process.env.GROUP || 'mainnet.2';
 const updateCacheInterval = parseInt(
   process.env.UPDATE_CACHE_INTERVAL || '3000',
 );

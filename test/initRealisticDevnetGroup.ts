@@ -6,7 +6,7 @@
  */
 
 
-const newGroupName = 'mainnet.1';
+const newGroupName = 'mainnet.2';
 const entropyProgramId = 'FcfzrnurPFXwxbx332wScnD5P86DwhpLpBbQsnr6LcH5';
 const serumProgramId = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin';
 const feesVault = 'GWFVVXwN8Xdb1NdoP5M59HiNWo2zkHyYUZ7dwwNHz6EE'; // token address of USDC owned by thiccy

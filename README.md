@@ -184,7 +184,7 @@ To run the market maker you will need:
 | -------- | ------- | ----------- |
 | `ENDPOINT_URL` | `https://mango.rpcpool.com` | Your RPC node endpoint |
 | `KEYPAIR` | `${HOME}/.config/solana/id.json` | The location of your wallet keypair |
-| `GROUP` | `mainnet.1` | Name of the group in ids.json |
+| `GROUP` | `mainnet.2` | Name of the group in ids.json |
 | `INTERVAL` | `10000` | Milliseconds to wait before checking for sick accounts |
 | `MANGO_ACCOUNT_NAME` | N/A | The MangoAccount name you input when initializing the MangoAccount via UI |
 | `MANGO_ACCOUNT_PUBKEY` | N/A | If no MangoAccount name, just pass in the pubkey |
@@ -199,5 +199,5 @@ To run the market maker you will need:
 git clone https://github.com/blockworks-foundation/mango-client-v3.git
 cd mango-client-v3
 yarn install
-KEYPAIR=~/.config/solana/id.json GROUP=mainnet.1 MANGO_ACCOUNT_NAME=mm MARKET=ADA INTERVAL=5000 SIZE_PERC=0.05 CHARGE=0.0015 LEAN_COEFF=0.00075 yarn mm
+KEYPAIR=~/.config/solana/id.json GROUP=mainnet.2 MANGO_ACCOUNT_NAME=mm MARKET=ADA INTERVAL=5000 SIZE_PERC=0.05 CHARGE=0.0015 LEAN_COEFF=0.00075 yarn mm
 ```

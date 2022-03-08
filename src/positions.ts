@@ -10,7 +10,7 @@ const connection = new Connection(
   'processed' as Commitment,
 );
 
-const groupName = process.env.GROUP || 'mainnet.1';
+const groupName = process.env.GROUP || 'mainnet.2';
 const groupIds = config.getGroup(cluster, groupName);
 if (!groupIds) {
   throw new Error(`Group ${groupName} not found`);
