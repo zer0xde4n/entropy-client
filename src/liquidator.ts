@@ -27,10 +27,10 @@ import { Market, OpenOrders } from '@project-serum/serum';
 import BN from 'bn.js';
 import { Orderbook } from '@project-serum/serum/lib/market';
 import axios from 'axios';
-import * as Env from 'dotenv';
-import { expand } from 'dotenv-expand';
+//import * as Env from 'dotenv';
+//import { expand } from 'dotenv-expand';
 
-expand(Env.config());
+//expand(Env.config());
 
 const interval = parseInt(process.env.INTERVAL || '3500');
 const refreshAccountsInterval = parseInt(

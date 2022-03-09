@@ -1,6 +1,6 @@
 # Entropy Markets Client Library
 
-Typescript client library for interacting with Entropy Markets, inspired by Mango Markets.
+Typescript client library for interacting with Entropy Markets. **This code, and Entropy Markets at large, draws inspiration and is friendly forked from Mango Markets.**
 
 ## Installation
 

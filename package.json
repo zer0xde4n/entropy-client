@@ -1,14 +1,14 @@
 {
-  "name": "@blockworks-foundation/mango-client",
-  "version": "3.2.25",
-  "description": "Client to interact with the Mango program on Solana",
+  "name": "@friktion-labs/entropy-client",
+  "version": "1.0.0",
+  "description": "Client to interact with Entropy Markets on Solana",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",
   "repository": "https://github.com/Friktion-Labs/entropy-client",
   "author": {
-    "name": "Blockworks Foundation",
-    "email": "hello@blockworks.foundation",
-    "url": "https://blockworks.foundation"
+    "name": "Friktion Labs",
+    "email": "team@friktionlabs.com",
+    "url": "https://friktion.fi"
   },
   "license": "MIT",
   "scripts": {
