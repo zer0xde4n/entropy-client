@@ -18,7 +18,7 @@ yarn add @friktion-labs/entropy-client
 
 ## Usage Example
 
-This example assumes that you have a wallet that is already setup with devnet tokens. The private key should be stored in `~/.config/solana/entropy-devnet-authority.json`. You can find the full source code in [example.ts](./src/example.ts).
+This example assumes that you have a wallet that is already setup with devnet tokens. The private key should be stored in `~/.config/solana/entropy-mainnet-authority.json`. You can find the full source code in [example.ts](./src/example.ts).
 
 ```js
 // Fetch orderbooks
