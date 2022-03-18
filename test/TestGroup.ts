@@ -16,7 +16,7 @@ import {
   makeCacheRootBankInstruction,
   makeUpdateFundingInstruction,
   makeUpdateRootBankInstruction,
-  MangoClient,
+  EntropyClient,
   msrmMints,
   PerpEventQueue,
   PerpEventQueueLayout,
@@ -102,7 +102,7 @@ export default class TestGroup {
   quoteMint = new PublicKey(
     this.FIXED_IDS.find((id) => id.symbol === 'USDC')?.mint,
   );
-  mangoProgramId = new PublicKey(
+  entropyProgramId = new PublicKey(
     '4skJ85cdxQAFVKbcGgfun8iZPL7BadVYXG3kGEGkufqA',
   );
   serumProgramId = new PublicKey(
@@ -125,8 +125,8 @@ export default class TestGroup {
     MNGO: '8k7F9Xb36oFJsjpCKpsXvg4cgBRoZtwNTc3EzG5Ttd2o',
   };
   oraclePks: PublicKey[] = [];
-  mangoGroupKey: PublicKey = zeroKey;
-  client: MangoClient;
+  entropyGroupKey: PublicKey = zeroKey;
+  client: EntropyClient;
   payer: Account;
   connection: Connection;
   log: boolean;
@@ -154,16 +154,16 @@ export default class TestGroup {
       'processed' as Commitment,
     );
 
-    this.client = new MangoClient(this.connection, this.mangoProgramId);
+    this.client = new EntropyClient(this.connection, this.entropyProgramId);
   }
 
   async init(): Promise<PublicKey> {
-    console.log('Creating Mango Group...');
+    console.log('Creating Entropy Group...');
     if (!this.log) {
       console.log = function () { };
     }
 
-    this.mangoGroupKey = await this.client.initMangoGroup(
+    this.entropyGroupKey = await this.client.initEntropyGroup(
       this.quoteMint,
       msrmMints['devnet'],
       this.serumProgramId,
@@ -175,7 +175,7 @@ export default class TestGroup {
       this.payer,
     );
 
-    let group = await this.client.getMangoGroup(this.mangoGroupKey);
+    let group = await this.client.getEntropyGroup(this.entropyGroupKey);
     for (let i = 0; i < this.FIXED_IDS.length; i++) {
       const fids = this.FIXED_IDS[i];
       if (fids.symbol === 'USDC') {
@@ -184,11 +184,11 @@ export default class TestGroup {
 
       console.log(`adding ${fids.symbol} oracle`);
       if (fids.price) {
-        await this.client.addStubOracle(this.mangoGroupKey, this.payer);
-        const tempGroup = await this.client.getMangoGroup(this.mangoGroupKey);
+        await this.client.addStubOracle(this.entropyGroupKey, this.payer);
+        const tempGroup = await this.client.getEntropyGroup(this.entropyGroupKey);
         this.oraclePks.push(new PublicKey(tempGroup.oracles[i]));
         await this.client.setStubOracle(
-          this.mangoGroupKey,
+          this.entropyGroupKey,
           this.oraclePks[this.oraclePks.length - 1],
           this.payer,
           fids.price,
@@ -212,7 +212,7 @@ export default class TestGroup {
       const marketPk = await listMarket(
         this.connection,
         this.payer,
-        this.mangoProgramId,
+        this.entropyProgramId,
         mint,
         new PublicKey(this.FIXED_IDS[this.FIXED_IDS.length - 1].mint),
         fids.baseLot,
@@ -263,10 +263,10 @@ export default class TestGroup {
       console.log = this.logger;
     }
     console.log(
-      'Succcessfully created new Mango Group ' + this.mangoGroupKey.toBase58(),
+      'Succcessfully created new Entropy Group ' + this.entropyGroupKey.toBase58(),
     );
 
-    return this.mangoGroupKey;
+    return this.entropyGroupKey;
   }
 
   async runKeeper() {
@@ -286,22 +286,22 @@ export default class TestGroup {
   async updateBanksAndMarkets() {
     console.log('processKeeperTransactions');
     const promises: Promise<string>[] = [];
-    const mangoGroup = await this.client.getMangoGroup(this.mangoGroupKey);
+    const entropyGroup = await this.client.getEntropyGroup(this.entropyGroupKey);
     const perpMarkets = await Promise.all(
       [1, 3].map((marketIndex) => {
-        return mangoGroup.loadPerpMarket(this.connection, marketIndex, 6, 6);
+        return entropyGroup.loadPerpMarket(this.connection, marketIndex, 6, 6);
       }),
     );
-    const rootBanks = await mangoGroup.loadRootBanks(this.connection);
+    const rootBanks = await entropyGroup.loadRootBanks(this.connection);
 
     const updateRootBankTransaction = new Transaction();
     this.FIXED_IDS.forEach((token, i) => {
       if (rootBanks[i]) {
         updateRootBankTransaction.add(
           makeUpdateRootBankInstruction(
-            this.mangoProgramId,
-            mangoGroup.publicKey,
-            mangoGroup.mangoCache,
+            this.entropyProgramId,
+            entropyGroup.publicKey,
+            entropyGroup.entropyCache,
             rootBanks[i]!.publicKey,
             rootBanks[i]!.nodeBanks.filter((n) => !n.equals(zeroKey)),
           ),
@@ -314,9 +314,9 @@ export default class TestGroup {
       if (market) {
         updateFundingTransaction.add(
           makeUpdateFundingInstruction(
-            this.mangoProgramId,
-            mangoGroup.publicKey,
-            mangoGroup.mangoCache,
+            this.entropyProgramId,
+            entropyGroup.publicKey,
+            entropyGroup.entropyCache,
             market.publicKey,
             market.bids,
             market.asks,
@@ -341,10 +341,10 @@ export default class TestGroup {
 
   async consumeEvents() {
     console.log('processConsumeEvents');
-    const mangoGroup = await this.client.getMangoGroup(this.mangoGroupKey);
+    const entropyGroup = await this.client.getEntropyGroup(this.entropyGroupKey);
     const perpMarkets = await Promise.all(
       [1, 3].map((marketIndex) => {
-        return mangoGroup.loadPerpMarket(this.connection, marketIndex, 6, 6);
+        return entropyGroup.loadPerpMarket(this.connection, marketIndex, 6, 6);
       }),
     );
     const eventQueuePks = perpMarkets.map((mkt) => mkt.eventQueue);
@@ -392,7 +392,7 @@ export default class TestGroup {
       }
 
       await this.client.consumeEvents(
-        mangoGroup,
+        entropyGroup,
         perpMarket,
         Array.from(accounts)
           .map((s) => new PublicKey(s))
@@ -408,12 +408,12 @@ export default class TestGroup {
     console.log('processUpdateCache');
     const batchSize = 8;
     const promises: Promise<string>[] = [];
-    const mangoGroup = await this.client.getMangoGroup(this.mangoGroupKey);
-    const rootBanks = mangoGroup.tokens
+    const entropyGroup = await this.client.getEntropyGroup(this.entropyGroupKey);
+    const rootBanks = entropyGroup.tokens
       .map((t) => t.rootBank)
       .filter((t) => !t.equals(zeroKey));
-    const oracles = mangoGroup.oracles.filter((o) => !o.equals(zeroKey));
-    const perpMarkets = mangoGroup.perpMarkets
+    const oracles = entropyGroup.oracles.filter((o) => !o.equals(zeroKey));
+    const perpMarkets = entropyGroup.perpMarkets
       .filter((pm) => !pm.isEmpty())
       .map((pm) => pm.perpMarket);
 
@@ -423,27 +423,27 @@ export default class TestGroup {
       const cacheTransaction = new Transaction();
       cacheTransaction.add(
         makeCacheRootBankInstruction(
-          this.mangoProgramId,
-          mangoGroup.publicKey,
-          mangoGroup.mangoCache,
+          this.entropyProgramId,
+          entropyGroup.publicKey,
+          entropyGroup.entropyCache,
           rootBanks.slice(startIndex, endIndex),
         ),
       );
 
       cacheTransaction.add(
         makeCachePricesInstruction(
-          this.mangoProgramId,
-          mangoGroup.publicKey,
-          mangoGroup.mangoCache,
+          this.entropyProgramId,
+          entropyGroup.publicKey,
+          entropyGroup.entropyCache,
           oracles.slice(startIndex, endIndex),
         ),
       );
 
       cacheTransaction.add(
         makeCachePerpMarketsInstruction(
-          this.mangoProgramId,
-          mangoGroup.publicKey,
-          mangoGroup.mangoCache,
+          this.entropyProgramId,
+          entropyGroup.publicKey,
+          entropyGroup.entropyCache,
           perpMarkets.slice(startIndex, endIndex),
         ),
       );
@@ -459,7 +459,7 @@ export default class TestGroup {
 
   async setOracle(marketIndex, price) {
     await this.client.setStubOracle(
-      this.mangoGroupKey,
+      this.entropyGroupKey,
       this.oraclePks[marketIndex],
       this.payer,
       price,

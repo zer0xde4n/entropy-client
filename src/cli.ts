@@ -27,11 +27,11 @@ import {
   GroupConfig,
   PerpMarketConfig,
 } from './config';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import { throwUndefined, uiToNative } from './utils';
 import { QUOTE_INDEX } from './layout';
 import { Coder } from '@project-serum/anchor';
-import idl from './mango_logs.json';
+import idl from './entropy_logs.json';
 import { getMarketIndexBySymbol } from '.';
 
 const clusterDesc: [string, Options] = [
@@ -61,7 +61,7 @@ const keypairDesc: [string, Options] = [
 ];
 const groupDesc: [string, PositionalOptions] = [
   'group',
-  { describe: 'the mango group name 🥭', type: 'string' },
+  { describe: 'the entropy group name 🥭', type: 'string' },
 ];
 const symbolDesc: [string, PositionalOptions] = [
   'symbol',
@@ -88,13 +88,13 @@ export function writeConfig(configPath: string, config: Config) {
 }
 
 yargs(hideBin(process.argv)).command(
-  'init-group <group> <mangoProgramId> <serumProgramId> <quote_mint> <fees_vault>',
+  'init-group <group> <entropyProgramId> <serumProgramId> <quote_mint> <fees_vault>',
   'initialize a new group',
   (y) => {
     return y
       .positional(...groupDesc)
-      .positional('mangoProgramId', {
-        describe: 'the program id of the mango smart contract',
+      .positional('entropyProgramId', {
+        describe: 'the program id of the entropy smart contract',
         type: 'string',
       })
       .positional('serumProgramId', {
@@ -107,7 +107,7 @@ yargs(hideBin(process.argv)).command(
       })
       .positional('fees_vault', {
         describe:
-          'the quote currency vault owned by Mango DAO token governance',
+          'the quote currency vault owned by Entropy DAO token governance',
         type: 'string',
       })
       .option('quote_optimal_util', {
@@ -141,7 +141,7 @@ yargs(hideBin(process.argv)).command(
   },
   async (args) => {
     console.log('init_group', args);
-    const mangoProgramId = new PublicKey(args.mangoProgramId as string);
+    const entropyProgramId = new PublicKey(args.entropyProgramId as string);
     const serumProgramId = new PublicKey(args.serumProgramId as string);
     const quoteMint = new PublicKey(args.quote_mint as string);
     const feesVault = new PublicKey(args.fees_vault as string);
@@ -154,7 +154,7 @@ yargs(hideBin(process.argv)).command(
       account,
       cluster,
       args.group as string,
-      mangoProgramId,
+      entropyProgramId,
       serumProgramId,
       args.symbol as string,
       quoteMint,
@@ -434,7 +434,7 @@ yargs(hideBin(process.argv)).command(
       : await listMarket(
           connection,
           account,
-          group.mangoProgramId,
+          group.entropyProgramId,
           new PublicKey(args.mint_pk as string),
           quoteMintPk,
           args.base_lot_size as number,
@@ -482,13 +482,13 @@ yargs(hideBin(process.argv)).command(
 ).argv;
 
 yargs(hideBin(process.argv)).command(
-  'show <group> <mango_account_pk>',
-  'Print relevant details about a mango account',
+  'show <group> <entropy_account_pk>',
+  'Print relevant details about a entropy account',
   (y) => {
     return y
       .positional(...groupDesc)
-      .positional('mango_account_pk', {
-        describe: 'the public key of the MangoAccount',
+      .positional('entropy_account_pk', {
+        describe: 'the public key of the EntropyAccount',
         type: 'string',
       })
       .option(...configDesc);
@@ -502,26 +502,26 @@ yargs(hideBin(process.argv)).command(
 
     const connection = openConnection(config, groupConfig.cluster);
 
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
-    const mangoAccount = await client.getMangoAccount(
-      new PublicKey(args.mango_account_pk as string),
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
+    const entropyAccount = await client.getEntropyAccount(
+      new PublicKey(args.entropy_account_pk as string),
       groupConfig.serumProgramId,
     );
-    const cache = await mangoGroup.loadCache(connection);
-    console.log(mangoAccount.toPrettyString(groupConfig, mangoGroup, cache));
+    const cache = await entropyGroup.loadCache(connection);
+    console.log(entropyAccount.toPrettyString(groupConfig, entropyGroup, cache));
     process.exit(0);
   },
 ).argv;
 
 yargs(hideBin(process.argv)).command(
   'inspect-wallet <group> <wallet_pk>',
-  'Print relevant details about a mango account',
+  'Print relevant details about a entropy account',
   (y) => {
     return y
       .positional(...groupDesc)
-      .positional('mango_account_pk', {
-        describe: 'the public key of the MangoAccount',
+      .positional('entropy_account_pk', {
+        describe: 'the public key of the EntropyAccount',
         type: 'string',
       })
       .option(...configDesc);
@@ -535,17 +535,17 @@ yargs(hideBin(process.argv)).command(
 
     const connection = openConnection(config, groupConfig.cluster);
 
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
-    const mangoAccounts = await client.getMangoAccountsForOwner(
-      mangoGroup,
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
+    const entropyAccounts = await client.getEntropyAccountsForOwner(
+      entropyGroup,
       new PublicKey(args.wallet_pk as string),
       false,
     );
 
-    const cache = await mangoGroup.loadCache(connection);
-    for (const mangoAccount of mangoAccounts) {
-      console.log(mangoAccount.toPrettyString(groupConfig, mangoGroup, cache));
+    const cache = await entropyGroup.loadCache(connection);
+    for (const entropyAccount of entropyAccounts) {
+      console.log(entropyAccount.toPrettyString(groupConfig, entropyGroup, cache));
     }
 
     process.exit(0);
@@ -558,7 +558,7 @@ yargs(hideBin(process.argv)).command(
   (y) => {
     return y
       .positional('log_b64', {
-        describe: 'base 64 encoded mango log',
+        describe: 'base 64 encoded entropy log',
         type: 'string',
       })
       .option(...configDesc);
@@ -569,7 +569,7 @@ yargs(hideBin(process.argv)).command(
     const coder = new Coder(idl);
     const event = coder.events.decode(args.log_b64 as string);
     if (!event) {
-      throw new Error('Invalid mango log');
+      throw new Error('Invalid entropy log');
     }
     const data: any = event.data;
 
@@ -578,8 +578,8 @@ yargs(hideBin(process.argv)).command(
       data.canceledOrderIds = data.canceledOrderIds.map((oid) =>
         oid.toString(),
       );
-      data.mangoGroup = data['mangoGroup'].toString();
-      data.mangoAccount = data['mangoAccount'].toString();
+      data.entropyGroup = data['entropyGroup'].toString();
+      data.entropyAccount = data['entropyAccount'].toString();
     } else {
       for (const key in data) {
         data[key] = data[key].toString();
@@ -593,7 +593,7 @@ yargs(hideBin(process.argv)).command(
 
 yargs(hideBin(process.argv)).command(
   'show-group <group>',
-  'Print relevant details about a MangoGroup',
+  'Print relevant details about a EntropyGroup',
   (y) => {
     return y.positional(...groupDesc).option(...configDesc);
   },
@@ -606,11 +606,11 @@ yargs(hideBin(process.argv)).command(
 
     const connection = openConnection(config, groupConfig.cluster);
 
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
 
     for (let i = 0; i < QUOTE_INDEX; i++) {
-      const perpMarket = mangoGroup.perpMarkets[i];
+      const perpMarket = entropyGroup.perpMarkets[i];
       if (perpMarket.isEmpty()) {
         continue;
       }
@@ -630,7 +630,7 @@ yargs(hideBin(process.argv)).command(
 
 yargs(hideBin(process.argv)).command(
   'show-insurance-vault <group>',
-  'Print relevant details about a MangoGroup',
+  'Print relevant details about a EntropyGroup',
   (y) => {
     return y.positional(...groupDesc).option(...configDesc);
   },
@@ -672,27 +672,27 @@ yargs(hideBin(process.argv)).command(
 
     const connection = openConnection(config, groupConfig.cluster);
 
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
-    const mangoAccounts = await client.getAllMangoAccounts(
-      mangoGroup,
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
+    const entropyAccounts = await client.getAllEntropyAccounts(
+      entropyGroup,
       [],
       false,
     );
 
-    mangoAccounts.sort((a, b) =>
+    entropyAccounts.sort((a, b) =>
       b.perpAccounts[perpMarketConfig.marketIndex].basePosition
         .abs()
         .cmp(a.perpAccounts[perpMarketConfig.marketIndex].basePosition.abs()),
     );
 
-    const mangoCache = await mangoGroup.loadCache(connection);
+    const entropyCache = await entropyGroup.loadCache(connection);
     for (let i = 0; i < 10; i++) {
       console.log(
-        `${i}: ${mangoAccounts[i].toPrettyString(
+        `${i}: ${entropyAccounts[i].toPrettyString(
           groupConfig,
-          mangoGroup,
-          mangoCache,
+          entropyGroup,
+          entropyCache,
         )}\n`,
       );
     }
@@ -720,27 +720,27 @@ yargs(hideBin(process.argv)).command(
 
     const connection = openConnection(config, groupConfig.cluster);
 
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
-    const mangoAccounts = await client.getAllMangoAccounts(
-      mangoGroup,
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
+    const entropyAccounts = await client.getAllEntropyAccounts(
+      entropyGroup,
       [],
       false,
     );
 
-    mangoAccounts.sort((a, b) =>
+    entropyAccounts.sort((a, b) =>
       b[args.deposits_or_borrows as string][marketIndex]
         .abs()
         .cmp(a[args.deposits_or_borrows as string][marketIndex].abs()),
     );
 
-    const mangoCache = await mangoGroup.loadCache(connection);
+    const entropyCache = await entropyGroup.loadCache(connection);
     for (let i = 0; i < 10; i++) {
       console.log(
-        `${i}: ${mangoAccounts[i].toPrettyString(
+        `${i}: ${entropyAccounts[i].toPrettyString(
           groupConfig,
-          mangoGroup,
-          mangoCache,
+          entropyGroup,
+          entropyCache,
         )}\n`,
       );
     }
@@ -773,15 +773,15 @@ yargs(hideBin(process.argv)).command(
     );
 
     const connection = openConnection(config, groupConfig.cluster);
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
 
     const perpMarket = await client.getPerpMarket(
       perpMarketConfig.publicKey,
       perpMarketConfig.baseDecimals,
       perpMarketConfig.quoteDecimals,
     );
-    console.log(perpMarket.toPrettyString(mangoGroup, perpMarketConfig));
+    console.log(perpMarket.toPrettyString(entropyGroup, perpMarketConfig));
 
     process.exit(0);
   },
@@ -793,7 +793,7 @@ yargs(hideBin(process.argv)).command(
   (y) => {
     return y
       .positional('token_account', {
-        describe: 'the public key of the MangoAccount',
+        describe: 'the public key of the EntropyAccount',
         type: 'string',
       })
       .positional('owner', {
@@ -802,7 +802,7 @@ yargs(hideBin(process.argv)).command(
       })
       .option('program_id', {
         default: 'GqTPL6qRf5aUuqscLh8Rg2HTxPUXfhhAXDptTLhp1t2J',
-        describe: 'Mango DAO program id',
+        describe: 'Entropy DAO program id',
         type: 'string',
       })
       .option('realm', {
@@ -890,9 +890,9 @@ yargs(hideBin(process.argv)).command(
       args.group as string,
     ) as GroupConfig;
     const symbol = args.symbol as string;
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
 
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
     const perpMarketConfig: PerpMarketConfig = throwUndefined(
       getPerpMarketByBaseSymbol(groupConfig, symbol),
     );
@@ -916,7 +916,7 @@ yargs(hideBin(process.argv)).command(
       throw new Error('exp must be an integer');
     }
     await client.changePerpMarketParams(
-      mangoGroup,
+      entropyGroup,
       perpMarket,
       account,
       getNumberOrUndef(args, 'maint_leverage'),
@@ -975,10 +975,10 @@ yargs(hideBin(process.argv)).command(
       args.group as string,
     ) as GroupConfig;
 
-    const client = new MangoClient(connection, groupConfig.mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
+    const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
     await client.setGroupAdmin(
-      mangoGroup,
+      entropyGroup,
       new PublicKey(args.admin_pk as string),
       account,
     );

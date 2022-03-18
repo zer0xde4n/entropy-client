@@ -3,7 +3,7 @@ import { I80F48, ZERO_I80F48 } from './fixednum';
 import { NodeBank, NodeBankLayout } from './layout';
 import { getMultipleAccounts, nativeI80F48ToUi, zeroKey } from './utils';
 import BN from 'bn.js';
-import MangoGroup from './MangoGroup';
+import EntropyGroup from './EntropyGroup';
 
 export default class RootBank {
   publicKey: PublicKey;
@@ -67,27 +67,27 @@ export default class RootBank {
     return this.borrowIndex.mul(totalBorrow);
   }
 
-  getUiTotalDeposit(mangoGroup: MangoGroup): I80F48 {
-    const tokenIndex = mangoGroup.getRootBankIndex(this.publicKey);
+  getUiTotalDeposit(entropyGroup: EntropyGroup): I80F48 {
+    const tokenIndex = entropyGroup.getRootBankIndex(this.publicKey);
 
     return nativeI80F48ToUi(
       this.getNativeTotalDeposit(),
-      mangoGroup.tokens[tokenIndex].decimals,
+      entropyGroup.tokens[tokenIndex].decimals,
     );
   }
 
-  getUiTotalBorrow(mangoGroup: MangoGroup): I80F48 {
-    const tokenIndex = mangoGroup.getRootBankIndex(this.publicKey);
+  getUiTotalBorrow(entropyGroup: EntropyGroup): I80F48 {
+    const tokenIndex = entropyGroup.getRootBankIndex(this.publicKey);
 
     return nativeI80F48ToUi(
       this.getNativeTotalBorrow(),
-      mangoGroup.tokens[tokenIndex].decimals,
+      entropyGroup.tokens[tokenIndex].decimals,
     );
   }
 
-  getBorrowRate(mangoGroup: MangoGroup): I80F48 {
-    const totalBorrows = this.getUiTotalBorrow(mangoGroup);
-    const totalDeposits = this.getUiTotalDeposit(mangoGroup);
+  getBorrowRate(entropyGroup: EntropyGroup): I80F48 {
+    const totalBorrows = this.getUiTotalBorrow(entropyGroup);
+    const totalDeposits = this.getUiTotalDeposit(entropyGroup);
 
     if (totalDeposits.eq(ZERO_I80F48) && totalBorrows.eq(ZERO_I80F48)) {
       return ZERO_I80F48;
@@ -109,10 +109,10 @@ export default class RootBank {
     }
   }
 
-  getDepositRate(mangoGroup: MangoGroup): I80F48 {
-    const borrowRate = this.getBorrowRate(mangoGroup);
-    const totalBorrows = this.getUiTotalBorrow(mangoGroup);
-    const totalDeposits = this.getUiTotalDeposit(mangoGroup);
+  getDepositRate(entropyGroup: EntropyGroup): I80F48 {
+    const borrowRate = this.getBorrowRate(entropyGroup);
+    const totalBorrows = this.getUiTotalBorrow(entropyGroup);
+    const totalDeposits = this.getUiTotalDeposit(entropyGroup);
 
     if (totalDeposits.eq(ZERO_I80F48) && totalBorrows.eq(ZERO_I80F48)) {
       return ZERO_I80F48;

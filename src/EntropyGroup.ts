@@ -10,8 +10,8 @@ import {
   SpotMarketInfo,
   PerpMarketInfo,
   PerpMarketLayout,
-  MangoCache,
-  MangoCacheLayout,
+  EntropyCache,
+  EntropyCacheLayout,
   QUOTE_INDEX,
   MAX_TOKENS,
 } from './layout';
@@ -19,7 +19,7 @@ import PerpMarket from './PerpMarket';
 import RootBank from './RootBank';
 import { getMultipleAccounts, zeroKey } from './utils';
 
-export default class MangoGroup {
+export default class EntropyGroup {
   publicKey: PublicKey;
   metaData!: MetaData;
   numOracles!: number;
@@ -31,7 +31,7 @@ export default class MangoGroup {
   signerKey!: PublicKey;
   admin!: PublicKey;
   dexProgramId!: PublicKey;
-  mangoCache!: PublicKey;
+  entropyCache!: PublicKey;
   insuranceVault!: PublicKey;
   srmVault!: PublicKey;
   msrmVault!: PublicKey;
@@ -54,7 +54,7 @@ export default class MangoGroup {
         return i;
       }
     }
-    throw new Error('This Oracle does not belong to this MangoGroup');
+    throw new Error('This Oracle does not belong to this EntropyGroup');
   }
 
   getSpotMarketIndex(spotMarketPk: PublicKey): number {
@@ -63,7 +63,7 @@ export default class MangoGroup {
         return i;
       }
     }
-    throw new Error('This Market does not belong to this MangoGroup');
+    throw new Error('This Market does not belong to this EntropyGroup');
   }
 
   getPerpMarketIndex(perpMarketPk: PublicKey): number {
@@ -72,7 +72,7 @@ export default class MangoGroup {
         return i;
       }
     }
-    throw new Error('This PerpMarket does not belong to this MangoGroup');
+    throw new Error('This PerpMarket does not belong to this EntropyGroup');
   }
 
   getTokenIndex(token: PublicKey): number {
@@ -81,7 +81,7 @@ export default class MangoGroup {
         return i;
       }
     }
-    throw new Error('This token does not belong in this MangoGroup');
+    throw new Error('This token does not belong in this EntropyGroup');
   }
 
   getRootBankIndex(rootBank: PublicKey): number {
@@ -90,7 +90,7 @@ export default class MangoGroup {
         return i;
       }
     }
-    throw new Error('This root bank does not belong in this MangoGroup');
+    throw new Error('This root bank does not belong in this EntropyGroup');
   }
 
   getBorrowRate(tokenIndex: number): I80F48 {
@@ -137,22 +137,22 @@ export default class MangoGroup {
     return price.toBig().mul(decimalAdj).toNumber();
   }
 
-  getPrice(tokenIndex: number, mangoCache: MangoCache): I80F48 {
+  getPrice(tokenIndex: number, entropyCache: EntropyCache): I80F48 {
     if (tokenIndex === QUOTE_INDEX) return ONE_I80F48;
     const decimalAdj = new Big(10).pow(
       this.getTokenDecimals(tokenIndex) - this.getTokenDecimals(QUOTE_INDEX),
     );
 
     return I80F48.fromBig(
-      mangoCache.priceCache[tokenIndex]?.price.toBig().mul(decimalAdj),
+      entropyCache.priceCache[tokenIndex]?.price.toBig().mul(decimalAdj),
     );
   }
 
-  getPriceUi(tokenIndex: number, mangoCache: MangoCache): number {
+  getPriceUi(tokenIndex: number, entropyCache: EntropyCache): number {
     if (tokenIndex === QUOTE_INDEX) return 1;
 
     return (
-      mangoCache.priceCache[tokenIndex]?.price.toNumber() *
+      entropyCache.priceCache[tokenIndex]?.price.toNumber() *
       Math.pow(
         10,
         6//this.getTokenDecimals(tokenIndex) - this.getTokenDecimals(QUOTE_INDEX),
@@ -160,10 +160,10 @@ export default class MangoGroup {
     );
   }
 
-  getPriceNative(tokenIndex: number, mangoCache: MangoCache): I80F48 {
+  getPriceNative(tokenIndex: number, entropyCache: EntropyCache): I80F48 {
     if (tokenIndex === QUOTE_INDEX) return ONE_I80F48;
 
-    return mangoCache.priceCache[tokenIndex].price;
+    return entropyCache.priceCache[tokenIndex].price;
   }
 
   getUiTotalDeposit(tokenIndex: number): I80F48 {
@@ -182,12 +182,12 @@ export default class MangoGroup {
     return rootBank.getUiTotalBorrow(this);
   }
 
-  async loadCache(connection: Connection): Promise<MangoCache> {
-    const account = await connection.getAccountInfo(this.mangoCache);
+  async loadCache(connection: Connection): Promise<EntropyCache> {
+    const account = await connection.getAccountInfo(this.entropyCache);
     if (!account || !account?.data) throw new Error('Unable to load cache');
 
-    const decoded = MangoCacheLayout.decode(account.data);
-    return new MangoCache(this.mangoCache, decoded);
+    const decoded = EntropyCacheLayout.decode(account.data);
+    return new EntropyCache(this.entropyCache, decoded);
   }
 
   async loadRootBanks(

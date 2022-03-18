@@ -18,11 +18,11 @@ import {
 } from '@solana/web3.js';
 import { StubOracleLayout } from '../src/layout';
 import { createAccountInstruction, sleep, ZERO_BN } from '../src/utils';
-import { msrmMints, MangoClient, I80F48 } from '../src';
-import MangoGroup from '../src/MangoGroup';
-import MangoAccount from '../src/MangoAccount';
+import { msrmMints, EntropyClient, I80F48 } from '../src';
+import EntropyGroup from '../src/EntropyGroup';
+import EntropyAccount from '../src/EntropyAccount';
 
-export const MangoProgramId = new PublicKey(
+export const EntropyProgramId = new PublicKey(
   '5fP7Z7a87ZEVsKr2tQPApdtq83GcTW4kz919R6ou5h5E',
 );
 export const DexProgramId = new PublicKey(
@@ -483,19 +483,19 @@ export async function createUserTokenAccounts(
   return tokenAccountPks;
 }
 
-export async function addSpotMarketToMangoGroup(
-  client: MangoClient,
+export async function addSpotMarketToEntropyGroup(
+  client: EntropyClient,
   payer: Account,
-  mangoGroup: MangoGroup,
+  entropyGroup: EntropyGroup,
   mint: Token,
   spotMarketPk: PublicKey,
   marketIndex: number,
   initialPrice: number,
 ): Promise<void> {
-  const oraclePk = await createOracle(client.connection, MangoProgramId, payer);
-  await client.addOracle(mangoGroup, oraclePk, payer);
+  const oraclePk = await createOracle(client.connection, EntropyProgramId, payer);
+  await client.addOracle(entropyGroup, oraclePk, payer);
   await client.setOracle(
-    mangoGroup,
+    entropyGroup,
     oraclePk,
     payer,
     I80F48.fromNumber(initialPrice),
@@ -504,7 +504,7 @@ export async function addSpotMarketToMangoGroup(
   const maintLeverage = initLeverage * 2;
   const liquidationFee = 1 / (2 * maintLeverage);
   await client.addSpotMarket(
-    mangoGroup,
+    entropyGroup,
     oraclePk,
     spotMarketPk,
     mint.publicKey,
@@ -518,127 +518,127 @@ export async function addSpotMarketToMangoGroup(
   );
 }
 
-export async function addSpotMarketsToMangoGroup(
-  client: MangoClient,
+export async function addSpotMarketsToEntropyGroup(
+  client: EntropyClient,
   payer: Account,
-  mangoGroupPk: PublicKey,
+  entropyGroupPk: PublicKey,
   mints: Token[],
   spotMarketPks: PublicKey[],
-): Promise<MangoGroup> {
-  let mangoGroup = await client.getMangoGroup(mangoGroupPk);
+): Promise<EntropyGroup> {
+  let entropyGroup = await client.getEntropyGroup(entropyGroupPk);
   for (let i = 0; i < mints.length - 1; i++) {
     const mint = mints[i];
     const spotMarketPk = spotMarketPks[i];
-    await addSpotMarketToMangoGroup(
+    await addSpotMarketToEntropyGroup(
       client,
       payer,
-      mangoGroup,
+      entropyGroup,
       mint,
       spotMarketPk,
       i,
       40000,
     );
   }
-  return await client.getMangoGroup(mangoGroupPk);
+  return await client.getEntropyGroup(entropyGroupPk);
 }
 
 export async function getNodeBank(
-  client: MangoClient,
-  mangoGroup: MangoGroup,
+  client: EntropyClient,
+  entropyGroup: EntropyGroup,
   bankIndex: number,
 ): Promise<any> {
-  let rootBanks = await mangoGroup.loadRootBanks(client.connection);
+  let rootBanks = await entropyGroup.loadRootBanks(client.connection);
   const rootBank = rootBanks[bankIndex];
   if (!rootBank) throw new Error(`no root bank at index ${bankIndex}`);
   return rootBank.nodeBankAccounts[0];
 }
 
 export async function cachePrices(
-  client: MangoClient,
+  client: EntropyClient,
   payer: Account,
-  mangoGroup: MangoGroup,
+  entropyGroup: EntropyGroup,
   oracleIndices: number[],
 ): Promise<void> {
   const pricesToCache: PublicKey[] = [];
   for (let oracleIndex of oracleIndices) {
-    pricesToCache.push(mangoGroup.oracles[oracleIndex]);
+    pricesToCache.push(entropyGroup.oracles[oracleIndex]);
   }
   await client.cachePrices(
-    mangoGroup.publicKey,
-    mangoGroup.mangoCache,
+    entropyGroup.publicKey,
+    entropyGroup.entropyCache,
     pricesToCache,
     payer,
   );
 }
 
 export async function cacheRootBanks(
-  client: MangoClient,
+  client: EntropyClient,
   payer: Account,
-  mangoGroup: MangoGroup,
+  entropyGroup: EntropyGroup,
   rootBankIndices: number[],
 ): Promise<void> {
   const rootBanksToCache: PublicKey[] = [];
   for (let rootBankIndex of rootBankIndices) {
-    rootBanksToCache.push(mangoGroup.tokens[rootBankIndex].rootBank);
+    rootBanksToCache.push(entropyGroup.tokens[rootBankIndex].rootBank);
   }
   await client.cacheRootBanks(
-    mangoGroup.publicKey,
-    mangoGroup.mangoCache,
+    entropyGroup.publicKey,
+    entropyGroup.entropyCache,
     rootBanksToCache,
     payer,
   );
 }
 
 export async function performDeposit(
-  client: MangoClient,
+  client: EntropyClient,
   payer: Account,
-  mangoGroup: MangoGroup,
-  mangoAccount: MangoAccount,
+  entropyGroup: EntropyGroup,
+  entropyAccount: EntropyAccount,
   nodeBank: any, //Todo: Can make explicit NodeBank maybe
   tokenAccountPk: PublicKey,
   tokenIndex: number,
   quantity: number,
 ) {
   await client.deposit(
-    mangoGroup,
-    mangoAccount,
+    entropyGroup,
+    entropyAccount,
     payer,
-    mangoGroup.tokens[tokenIndex].rootBank,
+    entropyGroup.tokens[tokenIndex].rootBank,
     nodeBank.publicKey,
     nodeBank.vault,
     tokenAccountPk,
     quantity,
   );
-  return await client.getMangoAccount(
-    mangoAccount.publicKey,
-    mangoGroup.dexProgramId,
+  return await client.getEntropyAccount(
+    entropyAccount.publicKey,
+    entropyGroup.dexProgramId,
   );
 }
 
 export async function getMarket(
-  client: MangoClient,
-  mangoGroup: MangoGroup,
+  client: EntropyClient,
+  entropyGroup: EntropyGroup,
   marketIndex: number,
 ) {
   return await Market.load(
     client.connection,
-    mangoGroup.spotMarkets[marketIndex].spotMarket,
+    entropyGroup.spotMarkets[marketIndex].spotMarket,
     {},
-    mangoGroup.dexProgramId,
+    entropyGroup.dexProgramId,
   );
 }
 
 export async function placeSpotOrder(
-  client: MangoClient,
+  client: EntropyClient,
   payer: Account,
-  mangoGroup: MangoGroup,
-  mangoAccount: MangoAccount,
+  entropyGroup: EntropyGroup,
+  entropyAccount: EntropyAccount,
   market: Market,
 ) {
   await client.placeSpotOrder(
-    mangoGroup,
-    mangoAccount,
-    mangoGroup.mangoCache,
+    entropyGroup,
+    entropyAccount,
+    entropyGroup.entropyCache,
     market,
     payer,
     'buy',
@@ -646,8 +646,8 @@ export async function placeSpotOrder(
     1,
     'limit',
   );
-  return await client.getMangoAccount(
-    mangoAccount.publicKey,
-    mangoGroup.dexProgramId,
+  return await client.getEntropyAccount(
+    entropyAccount.publicKey,
+    entropyGroup.dexProgramId,
   );
 }

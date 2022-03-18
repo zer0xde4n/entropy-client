@@ -1,12 +1,12 @@
 // import * as os from 'os';
 // import * as fs from 'fs';
-// import { MangoClient } from './client';
+// import { EntropyClient } from './client';
 // import { Account, Commitment, Connection, PublicKey } from '@solana/web3.js';
 // import configFile from './ids.json';
 // import { Config, getMarketByBaseSymbolAndKind, GroupConfig } from './config';
 // import { Market } from '@project-serum/serum';
 // import { ZERO_BN } from './utils';
-// import MangoGroup from './MangoGroup';
+// import EntropyGroup from './EntropyGroup';
 // import { addSwitchboardOracle, addPerpMarket } from './commands';
 // import { awaitTransactionSignatureConfirmation } from '.';
 
@@ -40,8 +40,8 @@
 //     'https://api.devnet.solana.com',
 //     'processed' as Commitment,
 //   );
-//   const client = new MangoClient(connection, groupConfig.mangoProgramId);
-//   const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
+//   const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+//   const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
 //   const owner = new Account(readKeypair());
 
 //   const oracle = new PublicKey(
@@ -50,7 +50,7 @@
 //     );
 
 //   console.log("ADDING PERP MARKET...");
-//   client.addPerpMarket(mangoGroup, 
+//   client.addPerpMarket(entropyGroup, 
 //       oracle, 
 //       new PublicKey("Bb9bsTQa1bGEtQ5KagGkvSHyuLqDWumFUcRqFusFNJWC"), 
 //       owner, 
@@ -77,13 +77,13 @@
 //     'perp',
 //   );
 //   console.log("CONFIG: ",perpMarketConfig.bidsKey.toString());
-//   const perpMarket = await mangoGroup.loadPerpMarket(
+//   const perpMarket = await entropyGroup.loadPerpMarket(
 //   connection,
 //   perpMarketConfig.marketIndex,
 //   perpMarketConfig.baseDecimals,
 //   perpMarketConfig.quoteDecimals,
 //   );
-//   console.log(perpMarket.toPrettyString(mangoGroup, perpMarketConfig));
+//   console.log(perpMarket.toPrettyString(entropyGroup, perpMarketConfig));
 
 // }
 

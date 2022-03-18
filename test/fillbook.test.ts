@@ -18,18 +18,18 @@ import {
 } from '@solana/web3.js';
 import fs from 'fs';
 import os from 'os';
-import { MangoClient } from '../src';
+import { EntropyClient } from '../src';
 import {
   makeCancelAllPerpOrdersInstruction,
   makePlacePerpOrderInstruction,
-  MangoCache,
+  EntropyCache,
   sleep,
 } from '../src';
 import { BN } from 'bn.js';
-import MangoAccount from '../src/MangoAccount';
+import EntropyAccount from '../src/EntropyAccount';
 
 async function fillBook() {
-  // load mango group and clients
+  // load entropy group and clients
   const config = new Config(configFile);
   const cluster = (process.env.CLUSTER || 'devnet') as Cluster;
   const groupName = process.env.GROUP || 'devnet.2';
@@ -38,8 +38,8 @@ async function fillBook() {
     throw new Error(`Group ${groupName} not found`);
   }
 
-  const mangoProgramId = groupIds.mangoProgramId;
-  const mangoGroupKey = groupIds.publicKey;
+  const entropyProgramId = groupIds.entropyProgramId;
+  const entropyGroupKey = groupIds.publicKey;
 
   const payer = new Account(
     JSON.parse(
@@ -55,9 +55,9 @@ async function fillBook() {
     process.env.ENDPOINT_URL || config.cluster_urls[cluster],
     'processed' as Commitment,
   );
-  const client = new MangoClient(connection, mangoProgramId);
+  const client = new EntropyClient(connection, entropyProgramId);
 
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
 
   const marketIndex = 1;
   const perpMarketConfig = getPerpMarketByIndex(
@@ -70,20 +70,20 @@ async function fillBook() {
     perpMarketConfig.quoteDecimals,
   );
 
-  const quoteTokenInfo = mangoGroup.getQuoteTokenInfo();
+  const quoteTokenInfo = entropyGroup.getQuoteTokenInfo();
   const quoteTokenAccount = await findLargestTokenAccountForOwner(
     connection,
     payer.publicKey,
     quoteTokenInfo.mint,
   );
-  const rootBank = (await mangoGroup.loadRootBanks(connection))[
+  const rootBank = (await entropyGroup.loadRootBanks(connection))[
     QUOTE_INDEX
   ] as RootBank;
   const nodeBank = rootBank.nodeBankAccounts[0] as NodeBank;
-  const cache = await mangoGroup.loadCache(connection);
+  const cache = await entropyGroup.loadCache(connection);
   // for (let i = 0; i < 3; i++) {
-  //   const mangoAccountStr = await client.initMangoAccountAndDeposit(
-  //     mangoGroup,
+  //   const entropyAccountStr = await client.initEntropyAccountAndDeposit(
+  //     entropyGroup,
   //     payer,
   //     quoteTokenInfo.rootBank,
   //     nodeBank.publicKey,
@@ -92,10 +92,10 @@ async function fillBook() {
   //     1000,
   //     `testfunding${i}`,
   //   );
-  //   const mangoAccountPk = new PublicKey(mangoAccountStr);
-  //   const mangoAccount = await client.getMangoAccount(
-  //     mangoAccountPk,
-  //     mangoGroup.dexProgramId,
+  //   const entropyAccountPk = new PublicKey(entropyAccountStr);
+  //   const entropyAccount = await client.getEntropyAccount(
+  //     entropyAccountPk,
+  //     entropyGroup.dexProgramId,
   //   );
   //   for (let j = 0; j < 1; j++) {
   //     for (let k = 0; k < 32; k++) {
@@ -107,16 +107,16 @@ async function fillBook() {
   //         perpMarket.uiToNativePriceQuantity(1, 0.0001);
   //
   //       const placeBidInstruction = makePlacePerpOrderInstruction(
-  //         mangoProgramId,
-  //         mangoGroup.publicKey,
-  //         mangoAccount.publicKey,
+  //         entropyProgramId,
+  //         entropyGroup.publicKey,
+  //         entropyAccount.publicKey,
   //         payer.publicKey,
-  //         mangoGroup.mangoCache,
+  //         entropyGroup.entropyCache,
   //         perpMarket.publicKey,
   //         perpMarket.bids,
   //         perpMarket.asks,
   //         perpMarket.eventQueue,
-  //         mangoAccount.getOpenOrdersKeysInBasket(),
+  //         entropyAccount.getOpenOrdersKeysInBasket(),
   //         nativeBidPrice,
   //         nativeBidSize,
   //         new BN(Date.now()),
@@ -125,16 +125,16 @@ async function fillBook() {
   //       );
   //       tx.add(placeBidInstruction);
   //       const placeAskInstruction = makePlacePerpOrderInstruction(
-  //         mangoProgramId,
-  //         mangoGroup.publicKey,
-  //         mangoAccount.publicKey,
+  //         entropyProgramId,
+  //         entropyGroup.publicKey,
+  //         entropyAccount.publicKey,
   //         payer.publicKey,
-  //         mangoGroup.mangoCache,
+  //         entropyGroup.entropyCache,
   //         perpMarket.publicKey,
   //         perpMarket.bids,
   //         perpMarket.asks,
   //         perpMarket.eventQueue,
-  //         mangoAccount.getOpenOrdersKeysInBasket(),
+  //         entropyAccount.getOpenOrdersKeysInBasket(),
   //         nativeAskPrice,
   //         nativeAskSize,
   //         new BN(Date.now()),
@@ -147,8 +147,8 @@ async function fillBook() {
   //   }
   // }
   const fundingTxid = await client.updateFunding(
-    mangoGroup.publicKey,
-    mangoGroup.mangoCache,
+    entropyGroup.publicKey,
+    entropyGroup.entropyCache,
     perpMarket.publicKey,
     perpMarket.bids,
     perpMarket.asks,

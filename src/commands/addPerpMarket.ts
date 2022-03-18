@@ -1,14 +1,14 @@
 import { Account, Connection } from '@solana/web3.js';
 import { uiToNative } from '..';
 // import { uiToNative } from '..';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import {
   getOracleBySymbol,
   getPerpMarketByBaseSymbol,
   getTokenBySymbol,
   GroupConfig,
-  mngoMints,
-  // mngoMints,
+  entropyMints,
+  // entropyMints,
   OracleConfig
 } from '../config';
 
@@ -38,9 +38,9 @@ export default async function addPerpMarket(
     symbol,
   });
 
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
 
-  let group = await client.getMangoGroup(groupConfig.publicKey);
+  let group = await client.getEntropyGroup(groupConfig.publicKey);
   const oracleDesc = getOracleBySymbol(groupConfig, symbol) as OracleConfig;
   const marketIndex = group.getOracleIndex(oracleDesc.publicKey);
 
@@ -63,7 +63,7 @@ export default async function addPerpMarket(
   await client.addPerpMarket(
     group,
     oracleDesc.publicKey,
-    mngoMints[groupConfig.cluster],
+    entropyMints[groupConfig.cluster],
     payer,
     maintLeverage,
     initLeverage,
@@ -81,7 +81,7 @@ export default async function addPerpMarket(
   );
 
   console.log('done');
-  group = await client.getMangoGroup(groupConfig.publicKey);
+  group = await client.getEntropyGroup(groupConfig.publicKey);
   const marketPk = group.perpMarkets[marketIndex].perpMarket;
   console.log("cluster: ", groupConfig.cluster);
   let baseDecimals: number;

@@ -1,12 +1,12 @@
 import * as os from 'os';
 import * as fs from 'fs';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import { Account, Commitment, Connection, PublicKey } from '@solana/web3.js';
 import configFile from './ids.json';
 import { Config, getMarketByBaseSymbolAndKind, GroupConfig } from './config';
 import { Market } from '@project-serum/serum';
 import { ZERO_BN } from './utils';
-import MangoGroup from './MangoGroup';
+import EntropyGroup from './EntropyGroup';
 import { addSwitchboardOracle, addPerpMarket } from './commands';
 
 function readKeypair() {
@@ -34,8 +34,8 @@ async function examplePerp() {
     'https://api.devnet.solana.com',
     'processed' as Commitment,
   );
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
-  const mangoGroup = await client.getMangoGroup(groupConfig.publicKey);
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+  const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
 
   // // load group & market
   const perpMarketConfig = getMarketByBaseSymbolAndKind(
@@ -44,7 +44,7 @@ async function examplePerp() {
     'perp',
   );
   
-  const perpMarket = await mangoGroup.loadPerpMarket(
+  const perpMarket = await entropyGroup.loadPerpMarket(
     connection,
     perpMarketConfig.marketIndex,
     perpMarketConfig.baseDecimals,
@@ -58,18 +58,18 @@ async function examplePerp() {
   // Place order
   const owner = new Account(readKeypair());
   const asker = new Account(readKeypair_opp());
-  const mangoAccount = (
-    await client.getMangoAccountsForOwner(mangoGroup, owner.publicKey)
+  const entropyAccount = (
+    await client.getEntropyAccountsForOwner(entropyGroup, owner.publicKey)
   )[0];
 
-  const mangoAccount_two = (
-    await client.getMangoAccountsForOwner(mangoGroup, asker.publicKey)
+  const entropyAccount_two = (
+    await client.getEntropyAccountsForOwner(entropyGroup, asker.publicKey)
   )[0];
 
   await client.placePerpOrder(
-    mangoGroup,
-    mangoAccount,
-    mangoGroup.mangoCache,
+    entropyGroup,
+    entropyAccount,
+    entropyGroup.entropyCache,
     perpMarket,
     owner,
     'sell', // or 'sell'
@@ -80,9 +80,9 @@ async function examplePerp() {
 
 
   await client.placePerpOrder(
-    mangoGroup,
-    mangoAccount_two,
-    mangoGroup.mangoCache,
+    entropyGroup,
+    entropyAccount_two,
+    entropyGroup.entropyCache,
     perpMarket,
     asker,
     'buy', // or 'sell'

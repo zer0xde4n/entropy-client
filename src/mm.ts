@@ -14,36 +14,36 @@ import {
 } from '@solana/web3.js';
 import fs from 'fs';
 import os from 'os';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import {
   BookSide,
   makeCancelAllPerpOrdersInstruction,
   makePlacePerpOrderInstruction,
-  MangoCache,
+  EntropyCache,
   ONE_BN,
   sleep,
 } from './index';
 import { BN } from 'bn.js';
-import MangoAccount from './MangoAccount';
-import MangoGroup from './MangoGroup';
+import EntropyAccount from './EntropyAccount';
+import EntropyGroup from './EntropyGroup';
 import PerpMarket from './PerpMarket';
 
 const interval = parseInt(process.env.INTERVAL || '10000');
 const control = { isRunning: true, interval: interval };
 
 async function mm() {
-  // load mango group and clients
+  // load entropy group and clients
   const config = new Config(configFile);
   const groupName = process.env.GROUP || 'devnet.2';
-  const mangoAccountName = process.env.MANGO_ACCOUNT_NAME;
+  const entropyAccountName = process.env.MANGO_ACCOUNT_NAME;
 
   const groupIds = config.getGroupWithName(groupName);
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
   const cluster = groupIds.cluster as Cluster;
-  const mangoProgramId = groupIds.mangoProgramId;
-  const mangoGroupKey = groupIds.publicKey;
+  const entropyProgramId = groupIds.entropyProgramId;
+  const entropyGroupKey = groupIds.publicKey;
 
   const payer = new Account(
     JSON.parse(
@@ -59,35 +59,35 @@ async function mm() {
     process.env.ENDPOINT_URL || config.cluster_urls[cluster],
     'processed' as Commitment,
   );
-  const client = new MangoClient(connection, mangoProgramId);
+  const client = new EntropyClient(connection, entropyProgramId);
 
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
 
-  const ownerAccounts = await client.getMangoAccountsForOwner(
-    mangoGroup,
+  const ownerAccounts = await client.getEntropyAccountsForOwner(
+    entropyGroup,
     payer.publicKey,
     true,
   );
 
-  let mangoAccountPk;
-  if (mangoAccountName) {
+  let entropyAccountPk;
+  if (entropyAccountName) {
     for (const ownerAccount of ownerAccounts) {
-      if (mangoAccountName === ownerAccount.name) {
-        mangoAccountPk = ownerAccount.publicKey;
+      if (entropyAccountName === ownerAccount.name) {
+        entropyAccountPk = ownerAccount.publicKey;
         break;
       }
     }
-    if (!mangoAccountPk) {
+    if (!entropyAccountPk) {
       throw new Error('MANGO_ACCOUNT_NAME not found');
     }
   } else {
-    const mangoAccountPkStr = process.env.MANGO_ACCOUNT_PUBKEY;
-    if (!mangoAccountPkStr) {
+    const entropyAccountPkStr = process.env.MANGO_ACCOUNT_PUBKEY;
+    if (!entropyAccountPkStr) {
       throw new Error(
         'Please add env variable MANGO_ACCOUNT_PUBKEY or MANGO_ACCOUNT_NAME',
       );
     } else {
-      mangoAccountPk = new PublicKey(mangoAccountPkStr);
+      entropyAccountPk = new PublicKey(entropyAccountPkStr);
     }
   }
 
@@ -123,10 +123,10 @@ async function mm() {
     onExit(
       client,
       payer,
-      mangoProgramId,
-      mangoGroup,
+      entropyProgramId,
+      entropyGroup,
       perpMarket,
-      mangoAccountPk,
+      entropyAccountPk,
     );
   });
 
@@ -135,26 +135,26 @@ async function mm() {
       // get fresh data
       // get orderbooks, get perp markets, caches
       // TODO load pyth oracle itself for most accurate prices
-      const [bids, asks, mangoCache, mangoAccount]: [
+      const [bids, asks, entropyCache, entropyAccount]: [
         BookSide,
         BookSide,
-        MangoCache,
-        MangoAccount,
+        EntropyCache,
+        EntropyAccount,
       ] = await Promise.all([
         perpMarket.loadBids(connection),
         perpMarket.loadAsks(connection),
-        mangoGroup.loadCache(connection),
-        client.getMangoAccount(mangoAccountPk, mangoGroup.dexProgramId),
+        entropyGroup.loadCache(connection),
+        client.getEntropyAccount(entropyAccountPk, entropyGroup.dexProgramId),
       ]);
 
       // TODO store the prices in an array to calculate volatility
 
       // Model logic
-      const fairValue = mangoGroup.getPrice(marketIndex, mangoCache).toNumber();
-      const equity = mangoAccount
-        .computeValue(mangoGroup, mangoCache)
+      const fairValue = entropyGroup.getPrice(marketIndex, entropyCache).toNumber();
+      const equity = entropyAccount
+        .computeValue(entropyGroup, entropyCache)
         .toNumber();
-      const perpAccount = mangoAccount.perpAccounts[marketIndex];
+      const perpAccount = entropyAccount.perpAccounts[marketIndex];
       // TODO look at event queue as well for unprocessed fills
       const basePos = perpAccount.getBasePositionUi(perpMarket);
 
@@ -186,7 +186,7 @@ async function mm() {
           : modelAskPrice;
 
       // TODO use order book to requote if size has changed
-      const openOrders = mangoAccount
+      const openOrders = entropyAccount
         .getPerpOpenOrders()
         .filter((o) => o.marketIndex === marketIndex);
       let moveOrders = openOrders.length === 0 || openOrders.length > 2;
@@ -229,16 +229,16 @@ async function mm() {
       ) {
         console.log(`${marketName}-PERP taking best bid spammer`);
         const takerSell = makePlacePerpOrderInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           payer.publicKey,
-          mangoCache.publicKey,
+          entropyCache.publicKey,
           perpMarket.publicKey,
           perpMarket.bids,
           perpMarket.asks,
           perpMarket.eventQueue,
-          mangoAccount.getOpenOrdersKeysInBasket(),
+          entropyAccount.getOpenOrdersKeysInBasket(),
           bestBid.priceLots,
           ONE_BN,
           new BN(Date.now()),
@@ -255,16 +255,16 @@ async function mm() {
       ) {
         console.log(`${marketName}-PERP taking best ask spammer`);
         const takerBuy = makePlacePerpOrderInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           payer.publicKey,
-          mangoCache.publicKey,
+          entropyCache.publicKey,
           perpMarket.publicKey,
           perpMarket.bids,
           perpMarket.asks,
           perpMarket.eventQueue,
-          mangoAccount.getOpenOrdersKeysInBasket(),
+          entropyAccount.getOpenOrdersKeysInBasket(),
           bestAsk.priceLots,
           ONE_BN,
           new BN(Date.now()),
@@ -276,9 +276,9 @@ async function mm() {
       if (moveOrders) {
         // cancel all, requote
         const cancelAllInstr = makeCancelAllPerpOrdersInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           payer.publicKey,
           perpMarket.publicKey,
           perpMarket.bids,
@@ -287,16 +287,16 @@ async function mm() {
         );
 
         const placeBidInstr = makePlacePerpOrderInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           payer.publicKey,
-          mangoCache.publicKey,
+          entropyCache.publicKey,
           perpMarket.publicKey,
           perpMarket.bids,
           perpMarket.asks,
           perpMarket.eventQueue,
-          mangoAccount.getOpenOrdersKeysInBasket(),
+          entropyAccount.getOpenOrdersKeysInBasket(),
           bookAdjBid,
           nativeBidSize,
           new BN(Date.now()),
@@ -305,16 +305,16 @@ async function mm() {
         );
 
         const placeAskInstr = makePlacePerpOrderInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           payer.publicKey,
-          mangoCache.publicKey,
+          entropyCache.publicKey,
           perpMarket.publicKey,
           perpMarket.bids,
           perpMarket.asks,
           perpMarket.eventQueue,
-          mangoAccount.getOpenOrdersKeysInBasket(),
+          entropyAccount.getOpenOrdersKeysInBasket(),
           bookAdjAsk,
           nativeAskSize,
           new BN(Date.now()),
@@ -344,23 +344,23 @@ async function mm() {
 }
 
 async function onExit(
-  client: MangoClient,
+  client: EntropyClient,
   payer: Account,
-  mangoProgramId: PublicKey,
-  mangoGroup: MangoGroup,
+  entropyProgramId: PublicKey,
+  entropyGroup: EntropyGroup,
   perpMarket: PerpMarket,
-  mangoAccountPk: PublicKey,
+  entropyAccountPk: PublicKey,
 ) {
   await sleep(control.interval);
-  const mangoAccount = await client.getMangoAccount(
-    mangoAccountPk,
-    mangoGroup.dexProgramId,
+  const entropyAccount = await client.getEntropyAccount(
+    entropyAccountPk,
+    entropyGroup.dexProgramId,
   );
 
   const cancelAllInstr = makeCancelAllPerpOrdersInstruction(
-    mangoProgramId,
-    mangoGroup.publicKey,
-    mangoAccount.publicKey,
+    entropyProgramId,
+    entropyGroup.publicKey,
+    entropyAccount.publicKey,
     payer.publicKey,
     perpMarket.publicKey,
     perpMarket.bids,

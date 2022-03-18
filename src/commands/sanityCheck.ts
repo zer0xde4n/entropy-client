@@ -1,43 +1,43 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { MangoClient } from '../client';
-import MangoAccount from '../MangoAccount';
+import { EntropyClient } from '../client';
+import EntropyAccount from '../EntropyAccount';
 import PerpMarket from '../PerpMarket';
 import { getPerpMarketByIndex, getTokenByMint, GroupConfig } from '../config';
-import { MangoCache, QUOTE_INDEX } from '../layout';
+import { EntropyCache, QUOTE_INDEX } from '../layout';
 import { I80F48, ZERO_I80F48 } from '../fixednum';
 import { ZERO_BN, zeroKey } from '../utils';
 import RootBank from '../RootBank';
 
-async function setUp(client: MangoClient, mangoGroupKey: PublicKey) {
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
-  await mangoGroup.loadRootBanks(client.connection);
+async function setUp(client: EntropyClient, entropyGroupKey: PublicKey) {
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
+  await entropyGroup.loadRootBanks(client.connection);
 
-  const mangoAccounts = await client.getAllMangoAccounts(
-    mangoGroup,
+  const entropyAccounts = await client.getAllEntropyAccounts(
+    entropyGroup,
     undefined,
     true,
   );
 
-  const mangoCache = await mangoGroup.loadCache(client.connection);
+  const entropyCache = await entropyGroup.loadCache(client.connection);
   const perpMarkets: (PerpMarket | undefined)[] = await Promise.all(
-    mangoGroup.perpMarkets.map((pmi, i) =>
+    entropyGroup.perpMarkets.map((pmi, i) =>
       pmi.isEmpty()
         ? undefined
         : client.getPerpMarket(
             pmi.perpMarket,
-            mangoGroup.tokens[i].decimals,
-            mangoGroup.tokens[QUOTE_INDEX].decimals,
+            entropyGroup.tokens[i].decimals,
+            entropyGroup.tokens[QUOTE_INDEX].decimals,
           ),
     ),
   );
 
-  return { mangoGroup, mangoCache, mangoAccounts, perpMarkets };
+  return { entropyGroup, entropyCache, entropyAccounts, perpMarkets };
 }
 
 function checkSumOfBasePositions(
   groupConfig: GroupConfig,
-  mangoCache: MangoCache,
-  mangoAccounts: MangoAccount[],
+  entropyCache: EntropyCache,
+  entropyAccounts: EntropyAccount[],
   perpMarkets: (PerpMarket | undefined)[],
 ) {
   let totalBase = ZERO_BN;
@@ -51,9 +51,9 @@ function checkSumOfBasePositions(
     let sumOfAllBasePositions = ZERO_BN;
     let absBasePositions = ZERO_BN;
     let sumQuote = perpMarket.feesAccrued;
-    const perpMarketCache = mangoCache.perpMarketCache[i];
-    for (const mangoAccount of mangoAccounts) {
-      const perpAccount = mangoAccount.perpAccounts[i];
+    const perpMarketCache = entropyCache.perpMarketCache[i];
+    for (const entropyAccount of entropyAccounts) {
+      const perpAccount = entropyAccount.perpAccounts[i];
       sumOfAllBasePositions = sumOfAllBasePositions.add(
         perpAccount.basePosition,
       );
@@ -81,28 +81,28 @@ function checkSumOfBasePositions(
 async function checkSumOfNetDeposit(
   groupConfig,
   connection,
-  mangoGroup,
-  mangoCache,
-  mangoAccounts,
+  entropyGroup,
+  entropyCache,
+  entropyAccounts,
 ) {
-  for (let i = 0; i < mangoGroup.tokens.length; i++) {
-    if (mangoGroup.tokens[i].mint.equals(zeroKey)) {
+  for (let i = 0; i < entropyGroup.tokens.length; i++) {
+    if (entropyGroup.tokens[i].mint.equals(zeroKey)) {
       continue;
     }
     console.log('======');
-    console.log(getTokenByMint(groupConfig, mangoGroup.tokens[i].mint)?.symbol);
+    console.log(getTokenByMint(groupConfig, entropyGroup.tokens[i].mint)?.symbol);
     console.log(
       'deposit index',
-      mangoCache.rootBankCache[i].depositIndex.toString(),
+      entropyCache.rootBankCache[i].depositIndex.toString(),
     );
     console.log(
       'borrow index',
-      mangoCache.rootBankCache[i].borrowIndex.toString(),
+      entropyCache.rootBankCache[i].borrowIndex.toString(),
     );
 
-    const sumOfNetDepositsAcrossMAs = mangoAccounts.reduce(
-      (sum, mangoAccount) => {
-        return sum.add(mangoAccount.getNet(mangoCache.rootBankCache[i], i));
+    const sumOfNetDepositsAcrossMAs = entropyAccounts.reduce(
+      (sum, entropyAccount) => {
+        return sum.add(entropyAccount.getNet(entropyCache.rootBankCache[i], i));
       },
       ZERO_I80F48,
     );
@@ -112,7 +112,7 @@ async function checkSumOfNetDeposit(
     );
 
     let vaultAmount = ZERO_I80F48;
-    const rootBank = mangoGroup.rootBankAccounts[i] as RootBank;
+    const rootBank = entropyGroup.rootBankAccounts[i] as RootBank;
     if (rootBank) {
       const nodeBanks = rootBank.nodeBankAccounts;
       const vaults = await Promise.all(
@@ -120,12 +120,12 @@ async function checkSumOfNetDeposit(
       );
       const sumOfNetDepositsAcrossNodes = nodeBanks.reduce((sum, nodeBank) => {
         return sum.add(
-          nodeBank.deposits.mul(mangoCache.rootBankCache[i].depositIndex),
+          nodeBank.deposits.mul(entropyCache.rootBankCache[i].depositIndex),
         );
       }, ZERO_I80F48);
       const sumOfNetBorrowsAcrossNodes = nodeBanks.reduce((sum, nodeBank) => {
         return sum.add(
-          nodeBank.borrows.mul(mangoCache.rootBankCache[i].borrowIndex),
+          nodeBank.borrows.mul(entropyCache.rootBankCache[i].borrowIndex),
         );
       }, ZERO_I80F48);
       console.log(
@@ -160,17 +160,17 @@ export default async function sanityCheck(
   connection: Connection,
   groupConfig: GroupConfig,
 ) {
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
-  const { mangoGroup, mangoCache, mangoAccounts, perpMarkets } = await setUp(
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+  const { entropyGroup, entropyCache, entropyAccounts, perpMarkets } = await setUp(
     client,
     groupConfig.publicKey,
   );
-  checkSumOfBasePositions(groupConfig, mangoCache, mangoAccounts, perpMarkets);
+  checkSumOfBasePositions(groupConfig, entropyCache, entropyAccounts, perpMarkets);
   await checkSumOfNetDeposit(
     groupConfig,
     connection,
-    mangoGroup,
-    mangoCache,
-    mangoAccounts,
+    entropyGroup,
+    entropyCache,
+    entropyAccounts,
   );
 }

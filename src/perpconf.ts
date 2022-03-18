@@ -1,7 +1,7 @@
 import configFile from './ids.json';
 import { Cluster, Config, GroupConfig } from './config';
 import { findPerpMarketParams } from './utils';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import { Commitment, Connection } from '@solana/web3.js';
 import { QUOTE_INDEX } from './layout';
 
@@ -10,14 +10,14 @@ async function main() {
   const groupName = process.env.GROUP || 'mainnet.2';
   const groupIds = config.getGroupWithName(groupName) as GroupConfig;
   const cluster = groupIds.cluster;
-  const mangoProgramId = groupIds.mangoProgramId;
-  const mangoGroupKey = groupIds.publicKey;
+  const entropyProgramId = groupIds.entropyProgramId;
+  const entropyGroupKey = groupIds.publicKey;
   const connection = new Connection(
     process.env.ENDPOINT_URL || config.cluster_urls[cluster],
     'processed' as Commitment,
   );
-  const client = new MangoClient(connection, mangoProgramId);
-  const group = await client.getMangoGroup(mangoGroupKey);
+  const client = new EntropyClient(connection, entropyProgramId);
+  const group = await client.getEntropyGroup(entropyGroupKey);
 
   // AVAX-PERP
   const avaxParams = findPerpMarketParams(

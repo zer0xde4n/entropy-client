@@ -1,6 +1,6 @@
 import { Commitment, Connection, PublicKey } from '@solana/web3.js';
 import { group } from 'console';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import { Cluster, Config } from './config';
 
 const config = Config.ids();
@@ -17,13 +17,13 @@ if (!groupIds) {
 }
 
 const dexProgramId = groupIds.serumProgramId;
-const mangoProgramId = groupIds.mangoProgramId;
-const mangoGroupKey = groupIds.publicKey;
-const client = new MangoClient(connection, mangoProgramId);
+const entropyProgramId = groupIds.entropyProgramId;
+const entropyGroupKey = groupIds.publicKey;
+const client = new EntropyClient(connection, entropyProgramId);
 
 async function watchAccount(pk: PublicKey) {
-  const group = await client.getMangoGroup(mangoGroupKey);
-  const account = await client.getMangoAccount(pk, dexProgramId);
+  const group = await client.getEntropyGroup(entropyGroupKey);
+  const account = await client.getEntropyAccount(pk, dexProgramId);
   const cache = await group.loadCache(connection);
   console.log(account.toPrettyString(groupIds!, group, cache));
   console.log('Assets:', account.getAssetsVal(group, cache).toString());
@@ -31,22 +31,22 @@ async function watchAccount(pk: PublicKey) {
 }
 
 async function watchHighestLiabilities(n: number) {
-  console.log('getMangoGroup');
-  const group = await client.getMangoGroup(mangoGroupKey);
-  console.log('getAllMangoAccounts');
-  const mangoAccounts = await client.getAllMangoAccounts(group);
+  console.log('getEntropyGroup');
+  const group = await client.getEntropyGroup(entropyGroupKey);
+  console.log('getAllEntropyAccounts');
+  const entropyAccounts = await client.getAllEntropyAccounts(group);
   console.log('loadCache');
   const cache = await group.loadCache(connection);
 
-  mangoAccounts.sort((a, b) => {
+  entropyAccounts.sort((a, b) => {
     const aLiabs = a.getLiabsVal(group, cache, 'Maint');
     const bLiabs = b.getLiabsVal(group, cache, 'Maint');
     return bLiabs.sub(aLiabs).toNumber();
   });
 
-  for (let i = 0; i < Math.min(n, mangoAccounts.length); i++) {
+  for (let i = 0; i < Math.min(n, entropyAccounts.length); i++) {
     console.log(i);
-    console.log(mangoAccounts[i].toPrettyString(groupIds!, group, cache));
+    console.log(entropyAccounts[i].toPrettyString(groupIds!, group, cache));
   }
 }
 

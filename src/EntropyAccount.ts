@@ -3,8 +3,8 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import { I80F48, ONE_I80F48, ZERO_I80F48 } from './fixednum';
 import {
   FREE_ORDER_SLOT,
-  MangoAccountLayout,
-  MangoCache,
+  EntropyAccountLayout,
+  EntropyCache,
   MAX_PAIRS,
   MetaData,
   QUOTE_INDEX,
@@ -19,7 +19,7 @@ import {
 } from './utils';
 import RootBank from './RootBank';
 import BN from 'bn.js';
-import MangoGroup from './MangoGroup';
+import EntropyGroup from './EntropyGroup';
 import PerpAccount from './PerpAccount';
 import { EOL } from 'os';
 import {
@@ -38,10 +38,10 @@ import {
 import PerpMarket from './PerpMarket';
 import { Order } from '@project-serum/serum/lib/market';
 
-export default class MangoAccount {
+export default class EntropyAccount {
   publicKey: PublicKey;
   metaData!: MetaData;
-  mangoGroup!: PublicKey;
+  entropyGroup!: PublicKey;
   owner!: PublicKey;
 
   inMarginBasket!: boolean[];
@@ -84,19 +84,19 @@ export default class MangoAccount {
   }
 
   getLiquidationPrice(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     oracleIndex: number,
   ): I80F48 | undefined {
     const { spot, perps, quote } = this.getHealthComponents(
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
     );
 
     let partialHealth = quote;
     let weightedAsset = ZERO_I80F48;
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
-      const w = getWeights(mangoGroup, i, 'Maint');
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
+      const w = getWeights(entropyGroup, i, 'Maint');
       if (i === oracleIndex) {
         const weightedSpot = spot[i].mul(
           spot[i].isPos() ? w.spotAssetWeight : w.spotLiabWeight,
@@ -106,7 +106,7 @@ export default class MangoAccount {
         );
         weightedAsset = weightedSpot.add(weightedPerps).neg();
       } else {
-        const price = mangoCache.priceCache[i].price;
+        const price = entropyCache.priceCache[i].price;
         const spotHealth = spot[i]
           .mul(price)
           .mul(spot[i].isPos() ? w.spotAssetWeight : w.spotLiabWeight);
@@ -129,8 +129,8 @@ export default class MangoAccount {
       I80F48.fromNumber(
         Math.pow(
           10,
-          mangoGroup.tokens[oracleIndex].decimals -
-            mangoGroup.tokens[QUOTE_INDEX].decimals,
+          entropyGroup.tokens[oracleIndex].decimals -
+            entropyGroup.tokens[QUOTE_INDEX].decimals,
         ),
       ),
     );
@@ -142,9 +142,9 @@ export default class MangoAccount {
   async reload(
     connection: Connection,
     dexProgramId: PublicKey | undefined = undefined,
-  ): Promise<MangoAccount> {
+  ): Promise<EntropyAccount> {
     const acc = await connection.getAccountInfo(this.publicKey);
-    Object.assign(this, MangoAccountLayout.decode(acc?.data));
+    Object.assign(this, EntropyAccountLayout.decode(acc?.data));
     if (dexProgramId) {
       await this.loadOpenOrders(connection, dexProgramId);
     }
@@ -155,7 +155,7 @@ export default class MangoAccount {
     connection: Connection,
     lastSlot = 0,
     dexProgramId: PublicKey | undefined = undefined,
-  ): Promise<MangoAccount> {
+  ): Promise<EntropyAccount> {
     let slot = -1;
     let value: AccountInfo<Buffer> | null = null;
 
@@ -168,7 +168,7 @@ export default class MangoAccount {
       await sleep(250);
     }
 
-    Object.assign(this, MangoAccountLayout.decode(value?.data));
+    Object.assign(this, EntropyAccountLayout.decode(value?.data));
     if (dexProgramId) {
       await this.loadOpenOrders(connection, dexProgramId);
     }
@@ -242,32 +242,32 @@ export default class MangoAccount {
   }
   getUiDeposit(
     rootBank: RootBank | RootBankCache,
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     tokenIndex: number,
   ): I80F48 {
     return nativeI80F48ToUi(
       this.getNativeDeposit(rootBank, tokenIndex).floor(),
-      mangoGroup.getTokenDecimals(tokenIndex),
+      entropyGroup.getTokenDecimals(tokenIndex),
     );
   }
   getUiBorrow(
     rootBank: RootBank | RootBankCache,
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     tokenIndex: number,
   ): I80F48 {
     return nativeI80F48ToUi(
       this.getNativeBorrow(rootBank, tokenIndex).ceil(),
-      mangoGroup.getTokenDecimals(tokenIndex),
+      entropyGroup.getTokenDecimals(tokenIndex),
     );
   }
 
-  getSpotVal(mangoGroup, mangoCache, index, assetWeight) {
+  getSpotVal(entropyGroup, entropyCache, index, assetWeight) {
     let assetsVal = ZERO_I80F48;
-    const price = mangoGroup.getPrice(index, mangoCache);
+    const price = entropyGroup.getPrice(index, entropyCache);
 
     const depositVal = this.getUiDeposit(
-      mangoCache.rootBankCache[index],
-      mangoGroup,
+      entropyCache.rootBankCache[index],
+      entropyGroup,
       index,
     )
       .mul(price)
@@ -280,7 +280,7 @@ export default class MangoAccount {
         I80F48.fromNumber(
           nativeToUi(
             openOrdersAccount.baseTokenTotal.toNumber(),
-            mangoGroup.tokens[index].decimals,
+            entropyGroup.tokens[index].decimals,
           ),
         )
           .mul(price)
@@ -291,7 +291,7 @@ export default class MangoAccount {
           nativeToUi(
             openOrdersAccount.quoteTokenTotal.toNumber() +
               openOrdersAccount['referrerRebatesAccrued'].toNumber(),
-            mangoGroup.tokens[QUOTE_INDEX].decimals,
+            entropyGroup.tokens[QUOTE_INDEX].decimals,
           ),
         ),
       );
@@ -301,40 +301,40 @@ export default class MangoAccount {
   }
 
   getAssetsVal(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     healthType?: HealthType,
   ): I80F48 {
     let assetsVal = ZERO_I80F48;
     // quote currency deposits
     assetsVal = assetsVal.add(
       this.getUiDeposit(
-        mangoCache.rootBankCache[QUOTE_INDEX],
-        mangoGroup,
+        entropyCache.rootBankCache[QUOTE_INDEX],
+        entropyGroup,
         QUOTE_INDEX,
       ),
     );
 
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
       let assetWeight = ONE_I80F48;
       if (healthType === 'Maint') {
-        assetWeight = mangoGroup.spotMarkets[i].maintAssetWeight;
+        assetWeight = entropyGroup.spotMarkets[i].maintAssetWeight;
       } else if (healthType === 'Init') {
-        assetWeight = mangoGroup.spotMarkets[i].initAssetWeight;
+        assetWeight = entropyGroup.spotMarkets[i].initAssetWeight;
       }
 
-      const spotVal = this.getSpotVal(mangoGroup, mangoCache, i, assetWeight);
+      const spotVal = this.getSpotVal(entropyGroup, entropyCache, i, assetWeight);
       assetsVal = assetsVal.add(spotVal);
 
-      const price = mangoCache.priceCache[i].price;
+      const price = entropyCache.priceCache[i].price;
       const perpsUiAssetVal = nativeI80F48ToUi(
         this.perpAccounts[i].getAssetVal(
-          mangoGroup.perpMarkets[i],
+          entropyGroup.perpMarkets[i],
           price,
-          mangoCache.perpMarketCache[i].shortFunding,
-          mangoCache.perpMarketCache[i].longFunding,
+          entropyCache.perpMarketCache[i].shortFunding,
+          entropyCache.perpMarketCache[i].longFunding,
         ),
-        mangoGroup.tokens[QUOTE_INDEX].decimals,
+        entropyGroup.tokens[QUOTE_INDEX].decimals,
       );
 
       assetsVal = assetsVal.add(perpsUiAssetVal);
@@ -344,43 +344,43 @@ export default class MangoAccount {
   }
 
   getLiabsVal(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     healthType?: HealthType,
   ): I80F48 {
     let liabsVal = ZERO_I80F48;
 
     liabsVal = liabsVal.add(
       this.getUiBorrow(
-        mangoCache.rootBankCache[QUOTE_INDEX],
-        mangoGroup,
+        entropyCache.rootBankCache[QUOTE_INDEX],
+        entropyGroup,
         QUOTE_INDEX,
       ),
     );
 
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
       let liabWeight = ONE_I80F48;
-      const price = mangoGroup.getPrice(i, mangoCache);
+      const price = entropyGroup.getPrice(i, entropyCache);
       if (healthType === 'Maint') {
-        liabWeight = mangoGroup.spotMarkets[i].maintLiabWeight;
+        liabWeight = entropyGroup.spotMarkets[i].maintLiabWeight;
       } else if (healthType === 'Init') {
-        liabWeight = mangoGroup.spotMarkets[i].initLiabWeight;
+        liabWeight = entropyGroup.spotMarkets[i].initLiabWeight;
       }
 
       liabsVal = liabsVal.add(
-        this.getUiBorrow(mangoCache.rootBankCache[i], mangoGroup, i).mul(
+        this.getUiBorrow(entropyCache.rootBankCache[i], entropyGroup, i).mul(
           price.mul(liabWeight),
         ),
       );
 
       const perpsUiLiabsVal = nativeI80F48ToUi(
         this.perpAccounts[i].getLiabsVal(
-          mangoGroup.perpMarkets[i],
-          mangoCache.priceCache[i].price,
-          mangoCache.perpMarketCache[i].shortFunding,
-          mangoCache.perpMarketCache[i].longFunding,
+          entropyGroup.perpMarkets[i],
+          entropyCache.priceCache[i].price,
+          entropyCache.perpMarketCache[i].shortFunding,
+          entropyCache.perpMarketCache[i].longFunding,
         ),
-        mangoGroup.tokens[QUOTE_INDEX].decimals,
+        entropyGroup.tokens[QUOTE_INDEX].decimals,
       );
 
       liabsVal = liabsVal.add(perpsUiLiabsVal);
@@ -389,37 +389,37 @@ export default class MangoAccount {
   }
 
   getNativeLiabsVal(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     healthType?: HealthType,
   ): I80F48 {
     let liabsVal = ZERO_I80F48;
 
     liabsVal = liabsVal.add(
-      this.getNativeBorrow(mangoCache.rootBankCache[QUOTE_INDEX], QUOTE_INDEX),
+      this.getNativeBorrow(entropyCache.rootBankCache[QUOTE_INDEX], QUOTE_INDEX),
     );
 
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
-      const price = mangoCache.priceCache[i].price;
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
+      const price = entropyCache.priceCache[i].price;
       let liabWeight = ONE_I80F48;
       if (healthType === 'Maint') {
-        liabWeight = mangoGroup.spotMarkets[i].maintLiabWeight;
+        liabWeight = entropyGroup.spotMarkets[i].maintLiabWeight;
       } else if (healthType === 'Init') {
-        liabWeight = mangoGroup.spotMarkets[i].initLiabWeight;
+        liabWeight = entropyGroup.spotMarkets[i].initLiabWeight;
       }
 
       liabsVal = liabsVal.add(
-        this.getNativeBorrow(mangoCache.rootBankCache[i], i).mul(
+        this.getNativeBorrow(entropyCache.rootBankCache[i], i).mul(
           price.mul(liabWeight),
         ),
       );
 
       liabsVal = liabsVal.add(
         this.perpAccounts[i].getLiabsVal(
-          mangoGroup.perpMarkets[i],
+          entropyGroup.perpMarkets[i],
           price,
-          mangoCache.perpMarketCache[i].shortFunding,
-          mangoCache.perpMarketCache[i].longFunding,
+          entropyCache.perpMarketCache[i].shortFunding,
+          entropyCache.perpMarketCache[i].longFunding,
         ),
       );
     }
@@ -439,8 +439,8 @@ export default class MangoAccount {
    * Take health components and return the assets and liabs weighted
    */
   getWeightedAssetsLiabsVals(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     spot: I80F48[],
     perps: I80F48[],
     quote: I80F48,
@@ -455,9 +455,9 @@ export default class MangoAccount {
       liabs = liabs.add(quote.neg());
     }
 
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
-      const w = getWeights(mangoGroup, i, healthType);
-      const price = mangoCache.priceCache[i].price;
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
+      const w = getWeights(entropyGroup, i, healthType);
+      const price = entropyCache.priceCache[i].price;
       if (spot[i].isPos()) {
         assets = spot[i].mul(price).mul(w.spotAssetWeight).add(assets);
       } else {
@@ -474,17 +474,17 @@ export default class MangoAccount {
   }
 
   getHealthFromComponents(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     spot: I80F48[],
     perps: I80F48[],
     quote: I80F48,
     healthType: HealthType,
   ): I80F48 {
     const health = quote;
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
-      const w = getWeights(mangoGroup, i, healthType);
-      const price = mangoCache.priceCache[i].price;
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
+      const w = getWeights(entropyGroup, i, healthType);
+      const price = entropyCache.priceCache[i].price;
       const spotHealth = spot[i]
         .mul(price)
         .imul(spot[i].isPos() ? w.spotAssetWeight : w.spotLiabWeight);
@@ -499,8 +499,8 @@ export default class MangoAccount {
   }
 
   getHealthsFromComponents(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     spot: I80F48[],
     perps: I80F48[],
     quote: I80F48,
@@ -508,9 +508,9 @@ export default class MangoAccount {
   ): { spot: I80F48; perp: I80F48 } {
     const spotHealth = quote;
     const perpHealth = quote;
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
-      const w = getWeights(mangoGroup, i, healthType);
-      const price = mangoCache.priceCache[i].price;
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
+      const w = getWeights(entropyGroup, i, healthType);
+      const price = entropyCache.priceCache[i].price;
       const _spotHealth = spot[i]
         .mul(price)
         .imul(spot[i].isPos() ? w.spotAssetWeight : w.spotLiabWeight);
@@ -528,17 +528,17 @@ export default class MangoAccount {
    * Amount of native quote currency available to expand your position in this market
    */
   getMarketMarginAvailable(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     marketIndex: number,
     marketType: 'spot' | 'perp',
   ): I80F48 {
-    const health = this.getHealth(mangoGroup, mangoCache, 'Init');
+    const health = this.getHealth(entropyGroup, entropyCache, 'Init');
 
     if (health.lte(ZERO_I80F48)) {
       return ZERO_I80F48;
     }
-    const w = getWeights(mangoGroup, marketIndex, 'Init');
+    const w = getWeights(entropyGroup, marketIndex, 'Init');
     const weight =
       marketType === 'spot' ? w.spotAssetWeight : w.perpAssetWeight;
     if (weight.gte(ONE_I80F48)) {
@@ -553,23 +553,23 @@ export default class MangoAccount {
    * Get token amount available to withdraw without borrowing.
    */
   getAvailableBalance(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     tokenIndex: number,
   ): I80F48 {
-    const health = this.getHealth(mangoGroup, mangoCache, 'Init');
-    const net = this.getNet(mangoCache.rootBankCache[tokenIndex], tokenIndex);
+    const health = this.getHealth(entropyGroup, entropyCache, 'Init');
+    const net = this.getNet(entropyCache.rootBankCache[tokenIndex], tokenIndex);
 
     if (tokenIndex === QUOTE_INDEX) {
       return health.min(net).max(ZERO_I80F48);
     } else {
-      const w = getWeights(mangoGroup, tokenIndex, 'Init');
+      const w = getWeights(entropyGroup, tokenIndex, 'Init');
 
       return net
         .min(
           health
             .div(w.spotAssetWeight)
-            .div(mangoCache.priceCache[tokenIndex].price),
+            .div(entropyCache.priceCache[tokenIndex].price),
         )
         .max(ZERO_I80F48);
     }
@@ -579,23 +579,23 @@ export default class MangoAccount {
    * Return the spot, perps and quote currency values after adjusting for
    * worst case open orders scenarios. These values are not adjusted for health
    * type
-   * @param mangoGroup
-   * @param mangoCache
+   * @param entropyGroup
+   * @param entropyCache
    */
   getHealthComponents(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
   ): { spot: I80F48[]; perps: I80F48[]; quote: I80F48 } {
-    const spot = Array(mangoGroup.numOracles).fill(ZERO_I80F48);
-    const perps = Array(mangoGroup.numOracles).fill(ZERO_I80F48);
+    const spot = Array(entropyGroup.numOracles).fill(ZERO_I80F48);
+    const perps = Array(entropyGroup.numOracles).fill(ZERO_I80F48);
     const quote = this.getNet(
-      mangoCache.rootBankCache[QUOTE_INDEX],
+      entropyCache.rootBankCache[QUOTE_INDEX],
       QUOTE_INDEX,
     );
 
-    for (let i = 0; i < mangoGroup.numOracles; i++) {
-      const bankCache = mangoCache.rootBankCache[i];
-      const price = mangoCache.priceCache[i].price;
+    for (let i = 0; i < entropyGroup.numOracles; i++) {
+      const bankCache = entropyCache.rootBankCache[i];
+      const price = entropyCache.priceCache[i].price;
       const baseNet = this.getNet(bankCache, i);
 
       // Evaluate spot first
@@ -626,11 +626,11 @@ export default class MangoAccount {
       }
 
       // Evaluate perps
-      if (!mangoGroup.perpMarkets[i].perpMarket.equals(zeroKey)) {
-        const perpMarketCache = mangoCache.perpMarketCache[i];
+      if (!entropyGroup.perpMarkets[i].perpMarket.equals(zeroKey)) {
+        const perpMarketCache = entropyCache.perpMarketCache[i];
         const perpAccount = this.perpAccounts[i];
-        const baseLotSize = mangoGroup.perpMarkets[i].baseLotSize;
-        const quoteLotSize = mangoGroup.perpMarkets[i].quoteLotSize;
+        const baseLotSize = entropyGroup.perpMarkets[i].baseLotSize;
+        const quoteLotSize = entropyGroup.perpMarkets[i].quoteLotSize;
         const takerQuote = I80F48.fromI64(
           perpAccount.takerQuote.mul(quoteLotSize),
         );
@@ -671,17 +671,17 @@ export default class MangoAccount {
   }
 
   getHealth(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     healthType: HealthType,
   ): I80F48 {
     const { spot, perps, quote } = this.getHealthComponents(
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
     );
     const health = this.getHealthFromComponents(
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       spot,
       perps,
       quote,
@@ -691,18 +691,18 @@ export default class MangoAccount {
   }
 
   getHealthRatio(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     healthType: HealthType,
   ): I80F48 {
     const { spot, perps, quote } = this.getHealthComponents(
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
     );
 
     const { assets, liabs } = this.getWeightedAssetsLiabsVals(
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       spot,
       perps,
       quote,
@@ -716,15 +716,15 @@ export default class MangoAccount {
     }
   }
 
-  computeValue(mangoGroup: MangoGroup, mangoCache: MangoCache): I80F48 {
-    return this.getAssetsVal(mangoGroup, mangoCache).sub(
-      this.getLiabsVal(mangoGroup, mangoCache),
+  computeValue(entropyGroup: EntropyGroup, entropyCache: EntropyCache): I80F48 {
+    return this.getAssetsVal(entropyGroup, entropyCache).sub(
+      this.getLiabsVal(entropyGroup, entropyCache),
     );
   }
 
-  getLeverage(mangoGroup: MangoGroup, mangoCache: MangoCache): I80F48 {
-    const liabs = this.getLiabsVal(mangoGroup, mangoCache);
-    const assets = this.getAssetsVal(mangoGroup, mangoCache);
+  getLeverage(entropyGroup: EntropyGroup, entropyCache: EntropyCache): I80F48 {
+    const liabs = this.getLiabsVal(entropyGroup, entropyCache);
+    const assets = this.getAssetsVal(entropyGroup, entropyCache);
 
     if (assets.gt(ZERO_I80F48)) {
       return liabs.div(assets.sub(liabs));
@@ -733,8 +733,8 @@ export default class MangoAccount {
   }
 
   getMaxLeverageForMarket(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     marketIndex: number,
     market: Market | PerpMarket,
     side: 'buy' | 'sell',
@@ -746,9 +746,9 @@ export default class MangoAccount {
     uiBorrowVal: I80F48;
     borrows: I80F48;
   } {
-    const initHealth = this.getHealth(mangoGroup, mangoCache, 'Init');
+    const initHealth = this.getHealth(entropyGroup, entropyCache, 'Init');
     const healthDecimals = I80F48.fromNumber(
-      Math.pow(10, mangoGroup.tokens[QUOTE_INDEX].decimals),
+      Math.pow(10, entropyGroup.tokens[QUOTE_INDEX].decimals),
     );
     const uiInitHealth = initHealth.div(healthDecimals);
 
@@ -758,7 +758,7 @@ export default class MangoAccount {
 
     if (market instanceof PerpMarket) {
       ({ initLiabWeight, initAssetWeight } =
-        mangoGroup.perpMarkets[marketIndex]);
+        entropyGroup.perpMarkets[marketIndex]);
 
       const basePos = this.perpAccounts[marketIndex].basePosition;
 
@@ -771,18 +771,18 @@ export default class MangoAccount {
       }
     } else {
       ({ initLiabWeight, initAssetWeight } =
-        mangoGroup.spotMarkets[marketIndex]);
+        entropyGroup.spotMarkets[marketIndex]);
 
       deposits = this.getUiDeposit(
-        mangoCache.rootBankCache[marketIndex],
-        mangoGroup,
+        entropyCache.rootBankCache[marketIndex],
+        entropyGroup,
         marketIndex,
       );
       uiDepositVal = deposits.mul(price);
 
       borrows = this.getUiBorrow(
-        mangoCache.rootBankCache[marketIndex],
-        mangoGroup,
+        entropyCache.rootBankCache[marketIndex],
+        entropyGroup,
         marketIndex,
       );
       uiBorrowVal = borrows.mul(price);
@@ -809,17 +809,17 @@ export default class MangoAccount {
   }
 
   getMaxWithBorrowForToken(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
     tokenIndex: number,
   ): I80F48 {
     const oldInitHealth = this.getHealth(
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       'Init',
     ).floor();
     const tokenDeposits = this.getNativeDeposit(
-      mangoCache.rootBankCache[tokenIndex],
+      entropyCache.rootBankCache[tokenIndex],
       tokenIndex,
     ).floor();
 
@@ -827,49 +827,49 @@ export default class MangoAccount {
     if (tokenIndex === QUOTE_INDEX) {
       liabWeight = assetWeight = nativePrice = ONE_I80F48;
     } else {
-      liabWeight = mangoGroup.spotMarkets[tokenIndex].initLiabWeight;
-      assetWeight = mangoGroup.spotMarkets[tokenIndex].initAssetWeight;
-      nativePrice = mangoCache.priceCache[tokenIndex].price;
+      liabWeight = entropyGroup.spotMarkets[tokenIndex].initLiabWeight;
+      assetWeight = entropyGroup.spotMarkets[tokenIndex].initAssetWeight;
+      nativePrice = entropyCache.priceCache[tokenIndex].price;
     }
 
     const newInitHealth = oldInitHealth
       .sub(tokenDeposits.mul(nativePrice).mul(assetWeight))
       .floor();
-    const price = mangoGroup.getPrice(tokenIndex, mangoCache);
+    const price = entropyGroup.getPrice(tokenIndex, entropyCache);
     const healthDecimals = I80F48.fromNumber(
-      Math.pow(10, mangoGroup.tokens[QUOTE_INDEX].decimals),
+      Math.pow(10, entropyGroup.tokens[QUOTE_INDEX].decimals),
     );
 
     return newInitHealth.div(healthDecimals).div(price.mul(liabWeight));
   }
 
-  isLiquidatable(mangoGroup: MangoGroup, mangoCache: MangoCache): boolean {
+  isLiquidatable(entropyGroup: EntropyGroup, entropyCache: EntropyCache): boolean {
     return (
       (this.beingLiquidated &&
-        this.getHealth(mangoGroup, mangoCache, 'Init').isNeg()) ||
-      this.getHealth(mangoGroup, mangoCache, 'Maint').isNeg()
+        this.getHealth(entropyGroup, entropyCache, 'Init').isNeg()) ||
+      this.getHealth(entropyGroup, entropyCache, 'Maint').isNeg()
     );
   }
 
   toPrettyString(
     groupConfig: GroupConfig,
-    mangoGroup: MangoGroup,
-    cache: MangoCache,
+    entropyGroup: EntropyGroup,
+    cache: EntropyCache,
   ): string {
     const lines: string[] = [];
-    lines.push('MangoAccount ' + this.publicKey.toBase58());
+    lines.push('EntropyAccount ' + this.publicKey.toBase58());
     lines.push('Owner: ' + this.owner.toBase58());
     lines.push(
       'Maint Health Ratio: ' +
-        this.getHealthRatio(mangoGroup, cache, 'Maint').toFixed(4),
+        this.getHealthRatio(entropyGroup, cache, 'Maint').toFixed(4),
     );
     lines.push(
-      'Maint Health: ' + this.getHealth(mangoGroup, cache, 'Maint').toFixed(4),
+      'Maint Health: ' + this.getHealth(entropyGroup, cache, 'Maint').toFixed(4),
     );
     lines.push(
-      'Init Health: ' + this.getHealth(mangoGroup, cache, 'Init').toFixed(4),
+      'Init Health: ' + this.getHealth(entropyGroup, cache, 'Init').toFixed(4),
     );
-    lines.push('Equity: ' + this.computeValue(mangoGroup, cache).toFixed(4));
+    lines.push('Equity: ' + this.computeValue(entropyGroup, cache).toFixed(4));
     lines.push('isBankrupt: ' + this.isBankrupt);
     lines.push('beingLiquidated: ' + this.beingLiquidated);
 
@@ -877,16 +877,16 @@ export default class MangoAccount {
     lines.push('Token: Net Balance / Base In Orders / Quote In Orders');
 
     const quoteAdj = new BN(10).pow(
-      new BN(mangoGroup.tokens[QUOTE_INDEX].decimals),
+      new BN(entropyGroup.tokens[QUOTE_INDEX].decimals),
     );
 
-    for (let i = 0; i < mangoGroup.tokens.length; i++) {
-      if (mangoGroup.tokens[i].mint.equals(zeroKey)) {
+    for (let i = 0; i < entropyGroup.tokens.length; i++) {
+      if (entropyGroup.tokens[i].mint.equals(zeroKey)) {
         continue;
       }
       const token = getTokenByMint(
         groupConfig,
-        mangoGroup.tokens[i].mint,
+        entropyGroup.tokens[i].mint,
       ) as TokenConfig;
 
       let baseInOrders = ZERO_BN;
@@ -895,7 +895,7 @@ export default class MangoAccount {
         i !== QUOTE_INDEX ? this.spotOpenOrdersAccounts[i] : undefined;
 
       if (openOrders) {
-        const baseAdj = new BN(10).pow(new BN(mangoGroup.tokens[i].decimals));
+        const baseAdj = new BN(10).pow(new BN(entropyGroup.tokens[i].decimals));
 
         baseInOrders = openOrders.baseTokenTotal.div(baseAdj);
         quoteInOrders = openOrders.quoteTokenTotal
@@ -904,7 +904,7 @@ export default class MangoAccount {
       }
       const net = nativeI80F48ToUi(
         this.getNet(cache.rootBankCache[i], i),
-        mangoGroup.tokens[i].decimals,
+        entropyGroup.tokens[i].decimals,
       );
 
       if (
@@ -926,22 +926,22 @@ export default class MangoAccount {
     lines.push('Market: Base Pos / Quote Pos / Unsettled Funding / Health');
 
     for (let i = 0; i < this.perpAccounts.length; i++) {
-      if (mangoGroup.perpMarkets[i].perpMarket.equals(zeroKey)) {
+      if (entropyGroup.perpMarkets[i].perpMarket.equals(zeroKey)) {
         continue;
       }
       const market = getMarketByPublicKey(
         groupConfig,
-        mangoGroup.perpMarkets[i].perpMarket,
+        entropyGroup.perpMarkets[i].perpMarket,
       ) as PerpMarketConfig;
       if (market === undefined) {
         continue;
       }
       const perpAccount = this.perpAccounts[i];
-      const perpMarketInfo = mangoGroup.perpMarkets[i];
+      const perpMarketInfo = entropyGroup.perpMarkets[i];
       lines.push(
         `${market.name}: ${this.getBasePositionUiWithGroup(
           i,
-          mangoGroup,
+          entropyGroup,
         ).toFixed(4)} / ${(
           perpAccount.getQuotePosition(cache.perpMarketCache[i]).toNumber() /
           quoteAdj.toNumber()
@@ -964,7 +964,7 @@ export default class MangoAccount {
   }
 
   /**
-   * Get all the open orders using only info in MangoAccount; Does not contain
+   * Get all the open orders using only info in EntropyAccount; Does not contain
    * information about the size of the order.
    */
   getPerpOpenOrders(): { marketIndex: number; price: BN; side: string }[] {
@@ -1008,7 +1008,7 @@ export default class MangoAccount {
    *  10,000 BTC-PERP contracts and exactly 1 BTC in UI
    *  Find the marketIndex in the ids.json list of perp markets
    */
-  getBasePositionUiWithGroup(marketIndex: number, group: MangoGroup): number {
+  getBasePositionUiWithGroup(marketIndex: number, group: EntropyGroup): number {
     return (
       this.perpAccounts[marketIndex].basePosition
         .mul(group.perpMarkets[marketIndex].baseLotSize)
@@ -1019,20 +1019,20 @@ export default class MangoAccount {
   /**
    * Return the equity in standard UI numbers. E.g. if equity is $100, this returns 100
    */
-  getEquityUi(mangoGroup: MangoGroup, mangoCache: MangoCache): number {
+  getEquityUi(entropyGroup: EntropyGroup, entropyCache: EntropyCache): number {
     return (
-      this.computeValue(mangoGroup, mangoCache).toNumber() /
-      Math.pow(10, mangoGroup.tokens[QUOTE_INDEX].decimals)
+      this.computeValue(entropyGroup, entropyCache).toNumber() /
+      Math.pow(10, entropyGroup.tokens[QUOTE_INDEX].decimals)
     );
   }
 
   /**
    * This is the init health divided by quote decimals
    */
-  getCollateralValueUi(mangoGroup: MangoGroup, mangoCache: MangoCache): number {
+  getCollateralValueUi(entropyGroup: EntropyGroup, entropyCache: EntropyCache): number {
     return (
-      this.getHealth(mangoGroup, mangoCache, 'Init').toNumber() /
-      Math.pow(10, mangoGroup.tokens[QUOTE_INDEX].decimals)
+      this.getHealth(entropyGroup, entropyCache, 'Init').toNumber() /
+      Math.pow(10, entropyGroup.tokens[QUOTE_INDEX].decimals)
     );
   }
 }

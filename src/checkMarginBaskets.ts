@@ -1,5 +1,5 @@
 import { Account, Commitment, Connection } from '@solana/web3.js';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import { Cluster, Config } from './config';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -17,9 +17,9 @@ if (!groupIds) {
   throw new Error(`Group ${groupName} not found`);
 }
 
-const mangoProgramId = groupIds.mangoProgramId;
-const mangoGroupKey = groupIds.publicKey;
-const client = new MangoClient(connection, mangoProgramId);
+const entropyProgramId = groupIds.entropyProgramId;
+const entropyGroupKey = groupIds.publicKey;
+const client = new EntropyClient(connection, entropyProgramId);
 
 const payer = new Account(
   JSON.parse(
@@ -29,16 +29,16 @@ const payer = new Account(
 );
 
 async function check() {
-  const group = await client.getMangoGroup(mangoGroupKey);
-  const mangoAccounts = await client.getAllMangoAccounts(
+  const group = await client.getEntropyGroup(entropyGroupKey);
+  const entropyAccounts = await client.getAllEntropyAccounts(
     group,
     undefined,
     true,
   );
   let total = 0;
 
-  for (const mangoAccount of mangoAccounts) {
-    const oos = mangoAccount.spotOpenOrdersAccounts;
+  for (const entropyAccount of entropyAccounts) {
+    const oos = entropyAccount.spotOpenOrdersAccounts;
 
     const shouldFix = oos.some((oo, i) => {
       if (oo) {
@@ -49,14 +49,14 @@ async function check() {
           oo['referrerRebatesAccrued'].isZero() &&
           freeSlotBitsStr == '340282366920938463463374607431768211455';
 
-        const inBasketAndEmpty = mangoAccount.inMarginBasket[i] && isEmpty;
+        const inBasketAndEmpty = entropyAccount.inMarginBasket[i] && isEmpty;
         const notInBasketAndNotEmpty =
-          !mangoAccount.inMarginBasket[i] && !isEmpty;
+          !entropyAccount.inMarginBasket[i] && !isEmpty;
 
         if (inBasketAndEmpty || notInBasketAndNotEmpty) {
           console.log(
-            mangoAccount.publicKey.toString(),
-            mangoAccount.name,
+            entropyAccount.publicKey.toString(),
+            entropyAccount.name,
             inBasketAndEmpty,
             notInBasketAndNotEmpty,
             oo.quoteTokenTotal.toString(),
@@ -70,7 +70,7 @@ async function check() {
       }
     });
     if (shouldFix) {
-      // await client.updateMarginBasket(group, mangoAccount, payer);
+      // await client.updateMarginBasket(group, entropyAccount, payer);
       total++;
     }
   }

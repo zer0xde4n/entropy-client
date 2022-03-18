@@ -3,7 +3,7 @@ This will probably move to its own repo at some point but easier to keep it here
  */
 import * as os from 'os';
 import * as fs from 'fs';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import {
   Account,
   Commitment,
@@ -23,7 +23,7 @@ import {
 } from './instruction';
 import BN from 'bn.js';
 import { PerpEventQueueLayout } from './layout';
-import { MangoGroup, PerpMarket, promiseUndef } from '.';
+import { EntropyGroup, PerpMarket, promiseUndef } from '.';
 import PerpEventQueue from './PerpEventQueue';
 import { PROGRAM_LAYOUT_VERSIONS } from '@project-serum/serum/lib/tokens_and_markets';
 require('dotenv').config({ path: '../.env' });
@@ -54,9 +54,9 @@ const groupIds = config.getGroup(cluster, groupName);
 if (!groupIds) {
   throw new Error(`Group ${groupName} not found`);
 }
-const mangoProgramId = groupIds.mangoProgramId;
-console.log("PROGRAM ID: ", mangoProgramId.toString())
-const mangoGroupKey = groupIds.publicKey;
+const entropyProgramId = groupIds.entropyProgramId;
+console.log("PROGRAM ID: ", entropyProgramId.toString())
+const entropyGroupKey = groupIds.publicKey;
 const payerJsonFile =  fs.readFileSync(process.env.KEYPAIR || (os.homedir() + '/.config/solana/entropy-mainnet-authority.json'), 'utf-8');
 const payer = new Account(
   JSON.parse(
@@ -68,16 +68,16 @@ const connection = new Connection(
   'processed' as Commitment,
 );
 console.log("DEVNET RPC: ", process.env.DEVNET_ENDPOINT_URL)
-const client = new MangoClient(connection, mangoProgramId);
+const client = new EntropyClient(connection, entropyProgramId);
 
 async function main() {
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
   const perpMarkets = await Promise.all(
     groupIds.perpMarkets.map((m) => {
-      return mangoGroup.loadPerpMarket(
+      return entropyGroup.loadPerpMarket(
         connection,
         m.marketIndex,
         m.baseDecimals,
@@ -86,26 +86,26 @@ async function main() {
     }),
   );
 
-  processUpdateCache(mangoGroup);
-  processKeeperTransactions(mangoGroup, perpMarkets);
+  processUpdateCache(entropyGroup);
+  processKeeperTransactions(entropyGroup, perpMarkets);
 
   if (consumeEvents) {
-    processConsumeEvents(mangoGroup, perpMarkets);
+    processConsumeEvents(entropyGroup, perpMarkets);
   }
 }
 console.time('processUpdateCache');
 
-async function processUpdateCache(mangoGroup: MangoGroup) {
+async function processUpdateCache(entropyGroup: EntropyGroup) {
   console.timeEnd('processUpdateCache');
 
   try {
     const batchSize = 8;
     let promises: Promise<string>[] = [];
-    const rootBanks = mangoGroup.tokens
+    const rootBanks = entropyGroup.tokens
       .map((t) => t.rootBank)
       .filter((t) => !t.equals(zeroKey));
-    const oracles = mangoGroup.oracles.filter((o) => !o.equals(zeroKey));
-    const perpMarkets = mangoGroup.perpMarkets
+    const oracles = entropyGroup.oracles.filter((o) => !o.equals(zeroKey));
+    const perpMarkets = entropyGroup.perpMarkets
       .filter((pm) => !pm.isEmpty())
       .map((pm) => pm.perpMarket);
     const nowTs = Date.now();
@@ -121,9 +121,9 @@ async function processUpdateCache(mangoGroup: MangoGroup) {
       if (shouldUpdateRootBankCache) {
         cacheTransaction.add(
           makeCacheRootBankInstruction(
-            mangoProgramId,
-            mangoGroup.publicKey,
-            mangoGroup.mangoCache,
+            entropyProgramId,
+            entropyGroup.publicKey,
+            entropyGroup.entropyCache,
             rootBanks.slice(startIndex, endIndex),
           ),
         );
@@ -148,18 +148,18 @@ async function processUpdateCache(mangoGroup: MangoGroup) {
 
       cacheTransaction.add(
         makeCachePricesInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoGroup.mangoCache,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyGroup.entropyCache,
           oracles.slice(startIndex, endIndex),
         ),
       );
 
       cacheTransaction.add(
         makeCachePerpMarketsInstruction(
-          mangoProgramId,
-          mangoGroup.publicKey,
-          mangoGroup.mangoCache,
+          entropyProgramId,
+          entropyGroup.publicKey,
+          entropyGroup.entropyCache,
           perpMarkets.slice(startIndex, endIndex),
         ),
       );
@@ -174,12 +174,12 @@ async function processUpdateCache(mangoGroup: MangoGroup) {
 
   } finally {
     console.time('processUpdateCache');
-    setTimeout(processUpdateCache, updateCacheInterval, mangoGroup);
+    setTimeout(processUpdateCache, updateCacheInterval, entropyGroup);
   }
 }
 
 async function processConsumeEvents(
-  mangoGroup: MangoGroup,
+  entropyGroup: EntropyGroup,
   perpMarkets: PerpMarket[],
 ) {
   try {
@@ -228,7 +228,7 @@ async function processConsumeEvents(
 
         return client
           .consumeEvents(
-            mangoGroup,
+            entropyGroup,
             perpMarket,
             Array.from(accounts)
               .map((s) => new PublicKey(s))
@@ -258,14 +258,14 @@ async function processConsumeEvents(
     setTimeout(
       processConsumeEvents,
       consumeEventsInterval,
-      mangoGroup,
+      entropyGroup,
       perpMarkets,
     );
   }
 }
 
 async function processKeeperTransactions(
-  mangoGroup: MangoGroup,
+  entropyGroup: EntropyGroup,
   perpMarkets: PerpMarket[],
 ) {
   try {
@@ -288,9 +288,9 @@ async function processKeeperTransactions(
       groupIds.tokens.slice(startIndex, endIndex).forEach((token) => {
         updateRootBankTransaction.add(
           makeUpdateRootBankInstruction(
-            mangoProgramId,
-            mangoGroup.publicKey,
-            mangoGroup.mangoCache,
+            entropyProgramId,
+            entropyGroup.publicKey,
+            entropyGroup.entropyCache,
             token.rootKey,
             token.nodeKeys,
           ),
@@ -302,9 +302,9 @@ async function processKeeperTransactions(
         if (market) {
           updateFundingTransaction.add(
             makeUpdateFundingInstruction(
-              mangoProgramId,
-              mangoGroup.publicKey,
-              mangoGroup.mangoCache,
+              entropyProgramId,
+              entropyGroup.publicKey,
+              entropyGroup.entropyCache,
               market.publicKey,
               market.bids,
               market.asks,
@@ -332,7 +332,7 @@ async function processKeeperTransactions(
     setTimeout(
       processKeeperTransactions,
       processKeeperInterval,
-      mangoGroup,
+      entropyGroup,
       perpMarkets,
     );
   }

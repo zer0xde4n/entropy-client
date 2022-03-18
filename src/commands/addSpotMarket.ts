@@ -1,6 +1,6 @@
 import { Market } from '@project-serum/serum';
 import { Account, Connection, PublicKey } from '@solana/web3.js';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import {
   getOracleBySymbol,
   getSpotMarketByBaseSymbol,
@@ -23,9 +23,9 @@ export default async function addSpotMarket(
   optimalRate: number,
   maxRate: number,
 ): Promise<GroupConfig> {
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
 
-  let group = await client.getMangoGroup(groupConfig.publicKey);
+  let group = await client.getEntropyGroup(groupConfig.publicKey);
   const oracleDesc = getOracleBySymbol(groupConfig, symbol) as OracleConfig;
 
   await client.addSpotMarket(
@@ -42,7 +42,7 @@ export default async function addSpotMarket(
     maxRate,
   );
 
-  group = await client.getMangoGroup(groupConfig.publicKey);
+  group = await client.getEntropyGroup(groupConfig.publicKey);
   const market = await Market.load(
     connection,
     spotMarket,

@@ -1,6 +1,6 @@
 # Entropy Markets Client Library
 
-Typescript client library for interacting with Entropy Markets, inspired heavily by Mango Markets.
+Typescript client library for interacting with Entropy Markets, inspired heavily by Entropy Markets.
 
 ## Installation
 
@@ -43,9 +43,9 @@ for (const order of asks) {
 
 // Place order
 await client.placePerpOrder(
-  mangoGroup,
-  mangoAccount,
-  mangoGroup.mangoCache,
+  entropyGroup,
+  entropyAccount,
+  entropyGroup.entropyCache,
   perpMarket,
   owner,
   'buy', // or 'sell'
@@ -57,14 +57,14 @@ await client.placePerpOrder(
 // retrieve open orders for account
 const openOrders = await perpMarket.loadOrdersForAccount(
   connection,
-  mangoAccount,
+  entropyAccount,
 );
 
 // cancel orders
 for (const order of openOrders) {
   await client.cancelPerpOrder(
-    mangoGroup,
-    mangoAccount,
+    entropyGroup,
+    entropyAccount,
     owner,
     perpMarket,
     order,

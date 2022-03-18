@@ -1,11 +1,11 @@
 import BN from 'bn.js';
 import { struct } from 'buffer-layout';
 import { expect } from 'chai';
-import { i64, MangoAccountLayout, RootBankLayout } from '../src/layout';
+import { i64, EntropyAccountLayout, RootBankLayout } from '../src/layout';
 
 describe('layout parsing', async () => {
   it('all accounts have the correct size', () => {
-    expect(MangoAccountLayout.span).to.eq(4296);
+    expect(EntropyAccountLayout.span).to.eq(4296);
   });
 
   /*
@@ -14,7 +14,7 @@ describe('layout parsing', async () => {
       readFileSync('./test/acc-failed-to-parse.b64', 'utf-8'),
       'base64',
     );
-    console.log(MangoAccountLayout.decode(contents));
+    console.log(EntropyAccountLayout.decode(contents));
   });
   */
 

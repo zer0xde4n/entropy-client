@@ -1,5 +1,5 @@
 import { Account, Connection, PublicKey, SystemInstruction } from '@solana/web3.js';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import { getOracleBySymbol, GroupConfig } from '../config';
 
 // devnet
@@ -36,8 +36,8 @@ export default async function addSwitchboardOracle(
   });
 
 
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
-  const group = await client.getMangoGroup(groupConfig.publicKey);
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
+  const group = await client.getEntropyGroup(groupConfig.publicKey);
   let oraclePk;
   if (groupConfig.cluster === 'mainnet') {
     oraclePk = new PublicKey(SWITCHBOARD_ORACLES_MAINNET[symbol]);

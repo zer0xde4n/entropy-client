@@ -1,4 +1,4 @@
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import {
   Commitment,
   Connection
@@ -30,8 +30,8 @@ export class Fetcher {
       throw new Error(`Group ${groupName} not found`);
     }
 
-    const mangoProgramId = groupIds.mangoProgramId;
-    const mangoGroupKey = groupIds.publicKey;
+    const entropyProgramId = groupIds.entropyProgramId;
+    const entropyGroupKey = groupIds.publicKey;
 
     // we don't need to load a solana Account; we're not gonna be signing anything
 
@@ -39,8 +39,8 @@ export class Fetcher {
       process.env.ENDPOINT_URL || config.cluster_urls[cluster],
       'processed' as Commitment,
     );
-    const client = new MangoClient(connection, mangoProgramId);
-    const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+    const client = new EntropyClient(connection, entropyProgramId);
+    const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
 
     const marketName = process.env.MARKET || 'MNGO';
 
@@ -56,7 +56,7 @@ export class Fetcher {
     const marketIndex = perpMarketConfig.marketIndex;
     const mk = groupIds.perpMarkets[marketIndex];
 
-    const perpMarket = await mangoGroup.loadPerpMarket(
+    const perpMarket = await entropyGroup.loadPerpMarket(
       connection,
       mk.marketIndex,
       mk.baseDecimals,

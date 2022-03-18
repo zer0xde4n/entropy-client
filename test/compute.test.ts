@@ -1,14 +1,14 @@
 import fs from 'fs';
 import os from 'os';
-import { Cluster, Config, MangoClient, sleep, throwUndefined } from '../src';
+import { Cluster, Config, EntropyClient, sleep, throwUndefined } from '../src';
 import configFile from '../src/ids.json';
 import { Account, Commitment, Connection, PublicKey } from '@solana/web3.js';
 import { Market } from '@project-serum/serum';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 async function testMaxCompute() {
-  // Load all the details for mango group
-  const groupName = process.env.GROUP || 'mango_test_v3.nightly';
+  // Load all the details for entropy group
+  const groupName = process.env.GROUP || 'entropy_test_v3.nightly';
   const cluster = (process.env.CLUSTER || 'devnet') as Cluster;
   const config = new Config(configFile);
   const groupIds = config.getGroup(cluster, groupName);
@@ -16,8 +16,8 @@ async function testMaxCompute() {
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
-  const mangoProgramId = groupIds.mangoProgramId;
-  const mangoGroupKey = groupIds.publicKey;
+  const entropyProgramId = groupIds.entropyProgramId;
+  const entropyGroupKey = groupIds.publicKey;
   const payer = new Account(
     JSON.parse(
       process.env.KEYPAIR ||
@@ -29,24 +29,24 @@ async function testMaxCompute() {
     'processed' as Commitment,
   );
 
-  const client = new MangoClient(connection, mangoProgramId);
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const client = new EntropyClient(connection, entropyProgramId);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
 
-  // create a new mango account
-  // TODO make this getOrInitMangoAccount
-  // const mangoAccountPk = await client.initMangoAccount(mangoGroup, payer);
-  // console.log('Created MangoAccountPk:', mangoAccountPk.toBase58());
+  // create a new entropy account
+  // TODO make this getOrInitEntropyAccount
+  // const entropyAccountPk = await client.initEntropyAccount(entropyGroup, payer);
+  // console.log('Created EntropyAccountPk:', entropyAccountPk.toBase58());
 
-  const mangoAccountPk = new PublicKey(
+  const entropyAccountPk = new PublicKey(
     'Dgwt7kchNmM6jwVsDDU1yracgmJBoGE1Wr5X6pUokJGp',
   );
 
-  let mangoAccount = await client.getMangoAccount(
-    mangoAccountPk,
-    mangoGroup.dexProgramId,
+  let entropyAccount = await client.getEntropyAccount(
+    entropyAccountPk,
+    entropyGroup.dexProgramId,
   );
   const sleepTime = 500;
-  const rootBanks = await mangoGroup.loadRootBanks(connection);
+  const rootBanks = await entropyGroup.loadRootBanks(connection);
 
   // deposit
   await sleep(sleepTime / 2);
@@ -56,9 +56,9 @@ async function testMaxCompute() {
       continue;
     }
     const tokenConfig = groupIds.tokens[i];
-    const tokenIndex = mangoGroup.getTokenIndex(tokenConfig.mintKey);
+    const tokenIndex = entropyGroup.getTokenIndex(tokenConfig.mintKey);
     const rootBank = throwUndefined(rootBanks[tokenIndex]);
-    const tokenInfo = mangoGroup.tokens[tokenIndex];
+    const tokenInfo = entropyGroup.tokens[tokenIndex];
     const token = new Token(
       connection,
       tokenInfo.mint,
@@ -75,8 +75,8 @@ async function testMaxCompute() {
     await sleep(sleepTime);
     console.log('depositing');
     await client.deposit(
-      mangoGroup,
-      mangoAccount,
+      entropyGroup,
+      entropyAccount,
       payer,
       rootBank.publicKey,
       banks[0].publicKey,
@@ -90,18 +90,18 @@ async function testMaxCompute() {
   for (let i = 0; i < 10; i++) {
     const market = await Market.load(
       connection,
-      mangoGroup.spotMarkets[i].spotMarket,
+      entropyGroup.spotMarkets[i].spotMarket,
       {},
-      mangoGroup.dexProgramId,
+      entropyGroup.dexProgramId,
     );
     while (1) {
       await sleep(sleepTime);
       console.log('placing spot order', i);
       try {
         await client.placeSpotOrder(
-          mangoGroup,
-          mangoAccount,
-          mangoGroup.mangoCache,
+          entropyGroup,
+          entropyAccount,
+          entropyGroup.entropyCache,
           market,
           payer,
           'sell',
@@ -110,9 +110,9 @@ async function testMaxCompute() {
           'limit',
         );
         await sleep(sleepTime);
-        mangoAccount = await client.getMangoAccount(
-          mangoAccountPk,
-          mangoGroup.dexProgramId,
+        entropyAccount = await client.getEntropyAccount(
+          entropyAccountPk,
+          entropyGroup.dexProgramId,
         );
         break;
       } catch (e) {
@@ -121,7 +121,7 @@ async function testMaxCompute() {
       }
     }
 
-    // for (const oo of mangoAccount.spotOpenOrders) {
+    // for (const oo of entropyAccount.spotOpenOrders) {
     //   console.log(oo.toBase58());
     // }
   }
@@ -130,7 +130,7 @@ async function testMaxCompute() {
   // for (let i = 0; i < groupIds.perpMarkets.length; i++) {
   //   await sleep(sleepTime);
   //   const perpMarket = await client.getPerpMarket(
-  //     mangoGroup.perpMarkets[i].perpMarket,
+  //     entropyGroup.perpMarkets[i].perpMarket,
   //     groupIds.perpMarkets[i].baseDecimals,
   //     groupIds.perpMarkets[i].quoteDecimals,
   //   );
@@ -138,9 +138,9 @@ async function testMaxCompute() {
   //   console.log('placing perp order', i);
   //   await sleep(sleepTime);
   //   await client.placePerpOrder(
-  //     mangoGroup,
-  //     mangoAccount,
-  //     mangoGroup.mangoCache,
+  //     entropyGroup,
+  //     entropyAccount,
+  //     entropyGroup.entropyCache,
   //     perpMarket,
   //     payer,
   //     'buy',

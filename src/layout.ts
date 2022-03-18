@@ -195,7 +195,7 @@ export function advancedOrderTypeLayout(property, span) {
  * Makes custom modifications to the instruction layouts because valid instructions can be many sizes
  */
 /** @internal */
-class MangoInstructionsUnion extends Union {
+class EntropyInstructionsUnion extends Union {
   constructor(discr?, defaultLayout?, property?) {
     super(discr, defaultLayout, property);
   }
@@ -221,10 +221,10 @@ class MangoInstructionsUnion extends Union {
   }
 }
 
-export const MangoInstructionLayout = new MangoInstructionsUnion(
+export const EntropyInstructionLayout = new EntropyInstructionsUnion(
   u32('instruction'),
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   0,
   struct([
     u64('signerNonce'),
@@ -233,16 +233,16 @@ MangoInstructionLayout.addVariant(
     I80F48Layout('quoteOptimalRate'),
     I80F48Layout('quoteMaxRate'),
   ]),
-  'InitMangoGroup',
+  'InitEntropyGroup',
 );
-MangoInstructionLayout.addVariant(1, struct([]), 'InitMangoAccount');
-MangoInstructionLayout.addVariant(2, struct([u64('quantity')]), 'Deposit');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(1, struct([]), 'InitEntropyAccount');
+EntropyInstructionLayout.addVariant(2, struct([u64('quantity')]), 'Deposit');
+EntropyInstructionLayout.addVariant(
   3,
   struct([u64('quantity'), u8('allowBorrow')]),
   'Withdraw',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   4,
   struct([
     I80F48Layout('maintLeverage'),
@@ -254,15 +254,15 @@ MangoInstructionLayout.addVariant(
   ]),
   'AddSpotMarket',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   5,
   struct([u64('marketIndex')]),
   'AddToBasket',
 );
-MangoInstructionLayout.addVariant(6, struct([u64('quantity')]), 'Borrow');
-MangoInstructionLayout.addVariant(7, struct([]), 'CachePrices');
-MangoInstructionLayout.addVariant(8, struct([]), 'CacheRootBanks');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(6, struct([u64('quantity')]), 'Borrow');
+EntropyInstructionLayout.addVariant(7, struct([]), 'CachePrices');
+EntropyInstructionLayout.addVariant(8, struct([]), 'CacheRootBanks');
+EntropyInstructionLayout.addVariant(
   9,
   struct([
     sideLayout(4, 'side'),
@@ -276,8 +276,8 @@ MangoInstructionLayout.addVariant(
   ]),
   'PlaceSpotOrder',
 );
-MangoInstructionLayout.addVariant(10, struct([]), 'AddOracle');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(10, struct([]), 'AddOracle');
+EntropyInstructionLayout.addVariant(
   11,
   struct([
     I80F48Layout('maintLeverage'),
@@ -295,7 +295,7 @@ MangoInstructionLayout.addVariant(
   ]),
   'AddPerpMarket',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   12,
   struct([
     i64('price'),
@@ -307,57 +307,57 @@ MangoInstructionLayout.addVariant(
   ]),
   'PlacePerpOrder',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   13,
   struct([u64('clientOrderId'), bool('invalidIdOk')]),
   'CancelPerpOrderByClientId',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   14,
   struct([i128('orderId'), bool('invalidIdOk')]),
   'CancelPerpOrder',
 );
-MangoInstructionLayout.addVariant(15, struct([u64('limit')]), 'ConsumeEvents');
-MangoInstructionLayout.addVariant(16, struct([]), 'CachePerpMarkets');
-MangoInstructionLayout.addVariant(17, struct([]), 'UpdateFunding');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(15, struct([u64('limit')]), 'ConsumeEvents');
+EntropyInstructionLayout.addVariant(16, struct([]), 'CachePerpMarkets');
+EntropyInstructionLayout.addVariant(17, struct([]), 'UpdateFunding');
+EntropyInstructionLayout.addVariant(
   18,
   struct([I80F48Layout('price')]),
   'SetOracle',
 );
-MangoInstructionLayout.addVariant(19, struct([]), 'SettleFunds');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(19, struct([]), 'SettleFunds');
+EntropyInstructionLayout.addVariant(
   20,
   struct([sideLayout(4, 'side'), u128('orderId')]),
   'CancelSpotOrder',
 );
-MangoInstructionLayout.addVariant(21, struct([]), 'UpdateRootBank');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(21, struct([]), 'UpdateRootBank');
+EntropyInstructionLayout.addVariant(
   22,
   struct([u64('marketIndex')]),
   'SettlePnl',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   23,
   struct([u64('tokenIndex'), u64('quantity')]),
   'SettleBorrow',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   24,
   struct([u8('limit')]),
   'ForceCancelSpotOrders',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   25,
   struct([u8('limit')]),
   'ForceCancelPerpOrders',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   26,
   struct([I80F48Layout('maxLiabTransfer')]),
   'LiquidateTokenAndToken',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   27,
   struct([
     u8('assetType'),
@@ -368,36 +368,36 @@ MangoInstructionLayout.addVariant(
   ]),
   'LiquidateTokenAndPerp',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   28,
   struct([i64('baseTransferRequest')]),
   'LiquidatePerpMarket',
 );
-MangoInstructionLayout.addVariant(29, struct([]), 'SettleFees');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(29, struct([]), 'SettleFees');
+EntropyInstructionLayout.addVariant(
   30,
   struct([u64('liabIndex'), I80F48Layout('maxLiabTransfer')]),
   'ResolvePerpBankruptcy',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   31,
   struct([I80F48Layout('maxLiabTransfer')]),
   'ResolveTokenBankruptcy',
 );
-MangoInstructionLayout.addVariant(32, struct([]), 'InitSpotOpenOrders');
-MangoInstructionLayout.addVariant(33, struct([]), 'RedeemMngo');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(32, struct([]), 'InitSpotOpenOrders');
+EntropyInstructionLayout.addVariant(33, struct([]), 'RedeemMngo');
+EntropyInstructionLayout.addVariant(
   34,
   struct([seq(u8(), INFO_LEN, 'info')]),
-  'AddMangoAccountInfo',
+  'AddEntropyAccountInfo',
 );
-MangoInstructionLayout.addVariant(35, struct([u64('quantity')]), 'DepositMsrm');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(35, struct([u64('quantity')]), 'DepositMsrm');
+EntropyInstructionLayout.addVariant(
   36,
   struct([u64('quantity')]),
   'WithdrawMsrm',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   37,
   struct([
     bool('maintLeverageOption'),
@@ -423,14 +423,14 @@ MangoInstructionLayout.addVariant(
   ]),
   'ChangePerpMarketParams',
 );
-MangoInstructionLayout.addVariant(38, struct([]), 'SetGroupAdmin');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(38, struct([]), 'SetGroupAdmin');
+EntropyInstructionLayout.addVariant(
   39,
   struct([u8('limit')]),
   'CancelAllPerpOrders',
 );
 
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   41,
   struct([
     sideLayout(4, 'side'),
@@ -445,8 +445,8 @@ MangoInstructionLayout.addVariant(
   'PlaceSpotOrder2',
 );
 
-MangoInstructionLayout.addVariant(42, struct([]), 'InitAdvancedOrders');
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(42, struct([]), 'InitAdvancedOrders');
+EntropyInstructionLayout.addVariant(
   43,
   struct([
     orderTypeLayout('orderType', 1),
@@ -460,18 +460,18 @@ MangoInstructionLayout.addVariant(
   ]),
   'AddPerpTriggerOrder',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   44,
   struct([u8('orderIndex')]),
   'RemoveAdvancedOrder',
 );
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   45,
   struct([u8('orderIndex')]),
   'ExecutePerpTriggerOrder',
 );
 
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   46,
   struct([
     I80F48Layout('maintLeverage'),
@@ -493,7 +493,7 @@ MangoInstructionLayout.addVariant(
   'CreatePerpMarket',
 );
 
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   47,
   struct([
     bool('maintLeverageOption'),
@@ -524,23 +524,23 @@ MangoInstructionLayout.addVariant(
   'ChangePerpMarketParams2',
 );
 
-MangoInstructionLayout.addVariant(48, struct([]), 'UpdateMarginBasket');
+EntropyInstructionLayout.addVariant(48, struct([]), 'UpdateMarginBasket');
 
-MangoInstructionLayout.addVariant(
+EntropyInstructionLayout.addVariant(
   49,
-  struct([u32('maxMangoAccounts')]),
-  'ChangeMaxMangoAccounts',
+  struct([u32('maxEntropyAccounts')]),
+  'ChangeMaxEntropyAccounts',
 );
 
 const instructionMaxSpan = Math.max(
   // @ts-ignore
-  ...Object.values(MangoInstructionLayout.registry).map((r) => r.span),
+  ...Object.values(EntropyInstructionLayout.registry).map((r) => r.span),
 );
 /** @internal */
-export function encodeMangoInstruction(data) {
+export function encodeEntropyInstruction(data) {
   const b = Buffer.alloc(instructionMaxSpan);
   // @ts-ignore
-  const span = MangoInstructionLayout.encode(data, b);
+  const span = EntropyInstructionLayout.encode(data, b);
   return b.slice(0, span);
 }
 /** @internal */
@@ -563,14 +563,14 @@ export function publicKeyLayout(property = '') {
 }
 /** @internal */
 export const DataType = {
-  MangoGroup: 0,
-  MangoAccount: 1,
+  EntropyGroup: 0,
+  EntropyAccount: 1,
   RootBank: 2,
   NodeBank: 3,
   PerpMarket: 4,
   Bids: 5,
   Asks: 6,
-  MangoCache: 7,
+  EntropyCache: 7,
   EventQueue: 8,
   AdvancedOrders: 9,
 };
@@ -791,7 +791,7 @@ export function perpAccountLayout(property = '') {
   return new PerpAccountLayout(property);
 }
 /** @internal */
-export const MangoGroupLayout = struct([
+export const EntropyGroupLayout = struct([
   metaDataLayout('metaData'),
   u64('numOracles'), //usize?
 
@@ -805,7 +805,7 @@ export const MangoGroupLayout = struct([
   publicKeyLayout('signerKey'),
   publicKeyLayout('admin'),
   publicKeyLayout('dexProgramId'),
-  publicKeyLayout('mangoCache'),
+  publicKeyLayout('entropyCache'),
   u64('validInterval'),
   publicKeyLayout('insuranceVault'),
   publicKeyLayout('srmVault'),
@@ -814,9 +814,9 @@ export const MangoGroupLayout = struct([
   seq(u8(), 32, 'padding'),
 ]);
 /** @internal */
-export const MangoAccountLayout = struct([
+export const EntropyAccountLayout = struct([
   metaDataLayout('metaData'),
-  publicKeyLayout('mangoGroup'),
+  publicKeyLayout('entropyGroup'),
   publicKeyLayout('owner'),
   seq(bool(), MAX_PAIRS, 'inMarginBasket'),
   u8('numInMarginBasket'),
@@ -896,7 +896,7 @@ export function liquidityMiningInfoLayout(property = '') {
 /** @internal */
 export const PerpMarketLayout = struct([
   metaDataLayout('metaData'),
-  publicKeyLayout('mangoGroup'),
+  publicKeyLayout('entropyGroup'),
   publicKeyLayout('bids'),
   publicKeyLayout('asks'),
   publicKeyLayout('eventQueue'),
@@ -1173,14 +1173,14 @@ export function perpMarketCacheLayout(property = '') {
   return new PerpMarketCacheLayout(property);
 }
 /** @internal */
-export const MangoCacheLayout = struct([
+export const EntropyCacheLayout = struct([
   metaDataLayout('metaData'),
   seq(priceCacheLayout(), MAX_PAIRS, 'priceCache'),
   seq(rootBankCacheLayout(), MAX_TOKENS, 'rootBankCache'),
   seq(perpMarketCacheLayout(), MAX_PAIRS, 'perpMarketCache'),
 ]);
 
-export class MangoCache {
+export class EntropyCache {
   publicKey: PublicKey;
 
   priceCache!: PriceCache[];

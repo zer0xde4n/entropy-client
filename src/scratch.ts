@@ -1,5 +1,5 @@
 import { Coder } from '@project-serum/anchor';
-import idl from './mango_logs.json';
+import idl from './entropy_logs.json';
 import configFile from './ids.json';
 import { Cluster, Config } from './config';
 
@@ -17,7 +17,7 @@ async function main() {
 
   // Parse entire logs
   // const logs = [];
-  // const parser = new EventParser(groupIds.mangoProgramId, coder);
+  // const parser = new EventParser(groupIds.entropyProgramId, coder);
   // parser.parseLogs(logs, (event) => console.log(event));
 
   // Parse a single log.

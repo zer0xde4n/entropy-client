@@ -6,8 +6,8 @@ import {
   BookSideLayout,
   clamp,
   FillEvent,
-  MangoAccount,
-  MangoCache,
+  EntropyAccount,
+  EntropyCache,
   MetaData,
   nativeToUi,
   PerpEventQueue,
@@ -18,7 +18,7 @@ import { I80F48 } from './fixednum';
 import { Modify } from './types';
 import { ZERO_BN } from './utils';
 import { EOL } from 'os';
-import MangoGroup from './MangoGroup';
+import EntropyGroup from './EntropyGroup';
 
 export type ParsedFillEvent = Modify<
   FillEvent,
@@ -33,7 +33,7 @@ export default class PerpMarket {
   publicKey: PublicKey;
   baseDecimals: number;
   quoteDecimals: number;
-  mangoGroup!: PublicKey;
+  entropyGroup!: PublicKey;
   bids!: PublicKey;
   asks!: PublicKey;
   eventQueue!: PublicKey;
@@ -112,8 +112,8 @@ export default class PerpMarket {
    * Make sure `cache`, `bids` and `asks` are up to date
    */
   getCurrentFundingRate(
-    group: MangoGroup,
-    cache: MangoCache,
+    group: EntropyGroup,
+    cache: EntropyCache,
     marketIndex: number,
     bids: BookSide,
     asks: BookSide,
@@ -186,7 +186,7 @@ export default class PerpMarket {
     return book;
   }
 
-  async loadOrdersForAccount(connection: Connection, account: MangoAccount) {
+  async loadOrdersForAccount(connection: Connection, account: EntropyAccount) {
     const [bids, asks] = await Promise.all([
       this.loadBids(connection),
       this.loadAsks(connection),
@@ -208,7 +208,7 @@ export default class PerpMarket {
   }
 
   toPrettyString(
-    group: MangoGroup,
+    group: EntropyGroup,
     perpMarketConfig: PerpMarketConfig,
   ): string {
     const info = group.perpMarkets[perpMarketConfig.marketIndex];

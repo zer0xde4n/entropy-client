@@ -1,7 +1,7 @@
 import IDS from './ids.json';
-import IDL from './mango_logs.json'
-import MangoAccount from './MangoAccount';
-import MangoGroup from './MangoGroup';
+import IDL from './entropy_logs.json'
+import EntropyAccount from './EntropyAccount';
+import EntropyGroup from './EntropyGroup';
 import PerpMarket from './PerpMarket';
 import PerpAccount from './PerpAccount';
 import PerpEventQueue from './PerpEventQueue';
@@ -9,8 +9,8 @@ import RootBank from './RootBank';
 export {
   IDL,
   IDS,
-  MangoAccount,
-  MangoGroup,
+  EntropyAccount,
+  EntropyGroup,
   PerpAccount,
   PerpEventQueue,
   PerpMarket,

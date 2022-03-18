@@ -3,7 +3,7 @@
  */
 import * as os from 'os';
 import * as fs from 'fs';
-import { MangoClient } from './client';
+import { EntropyClient } from './client';
 import {
   Account,
   Commitment,
@@ -35,8 +35,8 @@ const groupIds = config.getGroup(cluster, groupName);
 if (!groupIds) {
   throw new Error(`Group ${groupName} not found`);
 }
-const mangoProgramId = groupIds.mangoProgramId;
-const mangoGroupKey = groupIds.publicKey;
+const entropyProgramId = groupIds.entropyProgramId;
+const entropyGroupKey = groupIds.publicKey;
 const payer = new Account(
   JSON.parse(
     process.env.KEYPAIR ||
@@ -48,13 +48,13 @@ const connection = new Connection(
   process.env.ENDPOINT_URL || config.cluster_urls[cluster],
   'processed' as Commitment,
 );
-const client = new MangoClient(connection, mangoProgramId);
+const client = new EntropyClient(connection, entropyProgramId);
 
 async function run() {
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
 
   const spotMarkets = await Promise.all(
     groupIds.spotMarkets.map((m) => {
@@ -65,7 +65,7 @@ async function run() {
           skipPreflight: true,
           commitment: 'processed' as Commitment,
         },
-        mangoGroup.dexProgramId,
+        entropyGroup.dexProgramId,
       );
     }),
   );
@@ -134,7 +134,7 @@ async function run() {
         pcFee: quoteWallet,
         openOrdersAccounts,
         limit: consumeEventsLimit,
-        programId: mangoGroup.dexProgramId,
+        programId: entropyGroup.dexProgramId,
       });
 
       const transaction = new Transaction();

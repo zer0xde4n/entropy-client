@@ -1,21 +1,21 @@
 import { OpenOrders } from '@project-serum/serum';
 import { PublicKey } from '@solana/web3.js';
-import { MangoGroup, RootBank } from '../src';
-import { MangoAccountLayout, MangoCache, MangoCacheLayout, MangoGroupLayout, NodeBank, NodeBankLayout, RootBankLayout } from '../src/layout';
-import MangoAccount from '../src/MangoAccount';
+import { EntropyGroup, RootBank } from '../src';
+import { EntropyAccountLayout, EntropyCache, EntropyCacheLayout, EntropyGroupLayout, NodeBank, NodeBankLayout, RootBankLayout } from '../src/layout';
+import EntropyAccount from '../src/EntropyAccount';
 
-export function loadTestMangoGroup(filename: string): MangoGroup {
+export function loadTestEntropyGroup(filename: string): EntropyGroup {
   const accountJson: { [key: string]: any } = require(filename);
   const data = Buffer.from(accountJson.data[0], 'base64');
-  const layout = MangoGroupLayout.decode(data)
-  return new MangoGroup(new PublicKey(accountJson.address), layout)
+  const layout = EntropyGroupLayout.decode(data)
+  return new EntropyGroup(new PublicKey(accountJson.address), layout)
 }
 
-export function loadTestMangoAccount(filename: string): MangoAccount {
+export function loadTestEntropyAccount(filename: string): EntropyAccount {
   const accountJson: { [key: string]: any } = require(filename);
   const data = Buffer.from(accountJson.data[0], 'base64');
-  const layout = MangoAccountLayout.decode(data)
-  return new MangoAccount(new PublicKey(accountJson.address), layout)
+  const layout = EntropyAccountLayout.decode(data)
+  return new EntropyAccount(new PublicKey(accountJson.address), layout)
 }
 
 export function loadTestOpenOrders(filename: string): OpenOrders {
@@ -25,21 +25,21 @@ export function loadTestOpenOrders(filename: string): OpenOrders {
   return new OpenOrders(new PublicKey(openOrdersJson.address), layout, new PublicKey(0))
 }
 
-export function loadTestMangoCache(filename: string): MangoCache {
+export function loadTestEntropyCache(filename: string): EntropyCache {
   const accountJson: { [key: string]: any } = require(filename);
   const data = Buffer.from(accountJson.data[0], 'base64');
-  const layout = MangoCacheLayout.decode(data)
-  return new MangoCache(new PublicKey(accountJson.address), layout)
+  const layout = EntropyCacheLayout.decode(data)
+  return new EntropyCache(new PublicKey(accountJson.address), layout)
 }
 
-export function loadTestMangoRootBank(filename: string): RootBank {
+export function loadTestEntropyRootBank(filename: string): RootBank {
   const accountJson: { [key: string]: any } = require(filename);
   const data = Buffer.from(accountJson.data[0], 'base64');
   const layout = RootBankLayout.decode(data)
   return new RootBank(new PublicKey(accountJson.address), layout)
 }
 
-export function loadTestMangoNodeBank(filename: string): NodeBank {
+export function loadTestEntropyNodeBank(filename: string): NodeBank {
   const accountJson: { [key: string]: any } = require(filename);
   const data = Buffer.from(accountJson.data[0], 'base64');
   const layout = NodeBankLayout.decode(data)

@@ -32,31 +32,31 @@ async function testStopLoss() {
   );
 
   const testGroup = new TestGroup();
-  const mangoGroupKey = await testGroup.init();
-  const mangoGroup = await testGroup.client.getMangoGroup(mangoGroupKey);
+  const entropyGroupKey = await testGroup.init();
+  const entropyGroup = await testGroup.client.getEntropyGroup(entropyGroupKey);
   const perpMarkets = await Promise.all(
     [1, 3].map((marketIndex) => {
-      return mangoGroup.loadPerpMarket(connection, marketIndex, 6, 6);
+      return entropyGroup.loadPerpMarket(connection, marketIndex, 6, 6);
     }),
   );
 
-  const cache = await mangoGroup.loadCache(connection);
-  const rootBanks = await mangoGroup.loadRootBanks(connection);
+  const cache = await entropyGroup.loadCache(connection);
+  const rootBanks = await entropyGroup.loadRootBanks(connection);
   const quoteRootBank = rootBanks[QUOTE_INDEX];
   if (!quoteRootBank) {
     throw new Error('Quote Rootbank Not Found');
   }
   const quoteNodeBanks = await quoteRootBank.loadNodeBanks(connection);
 
-  const accountPk = await testGroup.client.initMangoAccount(mangoGroup, payer);
+  const accountPk = await testGroup.client.initEntropyAccount(entropyGroup, payer);
   console.log('Created Account:', accountPk.toBase58());
   await sleep(sleepTime);
-  const account = await testGroup.client.getMangoAccount(
+  const account = await testGroup.client.getEntropyAccount(
     accountPk,
-    mangoGroup.dexProgramId,
+    entropyGroup.dexProgramId,
   );
 
-  const quoteTokenInfo = mangoGroup.tokens[QUOTE_INDEX];
+  const quoteTokenInfo = entropyGroup.tokens[QUOTE_INDEX];
   const rayToken = new Token(
     connection,
     quoteTokenInfo.mint,
@@ -69,7 +69,7 @@ async function testStopLoss() {
 
   await testGroup.runKeeper();
   await testGroup.client.deposit(
-    mangoGroup,
+    entropyGroup,
     account,
     payer,
     quoteRootBank.publicKey,
@@ -81,17 +81,17 @@ async function testStopLoss() {
 
   await testGroup.runKeeper();
 
-  const makerPk = await testGroup.client.initMangoAccount(mangoGroup, payer);
+  const makerPk = await testGroup.client.initEntropyAccount(entropyGroup, payer);
   console.log('Created Maker:', accountPk.toBase58());
   await sleep(sleepTime);
-  const maker = await testGroup.client.getMangoAccount(
+  const maker = await testGroup.client.getEntropyAccount(
     makerPk,
-    mangoGroup.dexProgramId,
+    entropyGroup.dexProgramId,
   );
 
   await testGroup.runKeeper();
   await testGroup.client.deposit(
-    mangoGroup,
+    entropyGroup,
     maker,
     payer,
     quoteRootBank.publicKey,
@@ -106,9 +106,9 @@ async function testStopLoss() {
   // Get a position on the perps
   console.log('placing maker order');
   await testGroup.client.placePerpOrder(
-    mangoGroup,
+    entropyGroup,
     maker,
-    mangoGroup.mangoCache,
+    entropyGroup.entropyCache,
     perpMarkets[0],
     payer,
     'buy',
@@ -122,9 +122,9 @@ async function testStopLoss() {
   // Get a position on the perps
   console.log('placing taker order');
   await testGroup.client.placePerpOrder(
-    mangoGroup,
+    entropyGroup,
     account,
-    mangoGroup.mangoCache,
+    entropyGroup.entropyCache,
     perpMarkets[0],
     payer,
     'sell',
@@ -146,7 +146,7 @@ async function testStopLoss() {
   // Add the trigger order, this should be executable immediately
   await sleep(sleepTime);
   const txid = await testGroup.client.addPerpTriggerOrder(
-    mangoGroup,
+    entropyGroup,
     account,
     perpMarkets[0],
     payer,
@@ -187,7 +187,7 @@ async function testStopLoss() {
   // Now trigger the order
   console.log('execute order');
   await testGroup.client.executePerpTriggerOrder(
-    mangoGroup,
+    entropyGroup,
     account,
     cache,
     perpMarkets[0],
@@ -198,7 +198,7 @@ async function testStopLoss() {
   await account.reload(testGroup.connection, testGroup.serumProgramId);
   console.log(
     'health',
-    account.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    account.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
 
   const openOrders = await perpMarkets[0].loadOrdersForAccount(

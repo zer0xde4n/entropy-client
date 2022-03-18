@@ -1,8 +1,8 @@
 /**
  * How to use:
- * 1.) Update the mango group name on line 7
+ * 1.) Update the entropy group name on line 7
  * 2.) Run yarn launch-realistic-group
- * 3.) Update the mango group name in keeper.ts crank.ts and in the UI in useMangoStore.ts
+ * 3.) Update the entropy group name in keeper.ts crank.ts and in the UI in useEntropyStore.ts
  */
 
 
@@ -120,7 +120,7 @@ const initNewGroup = async () => {
     }
     console.log('---');
   }
-  console.log('Succcessfully created new mango group.');
+  console.log('Succcessfully created new entropy group.');
 };
 
 function execCommand(cmd) {

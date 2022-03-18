@@ -1,5 +1,5 @@
 import { Account, Connection, PublicKey } from '@solana/web3.js';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import { Cluster, GroupConfig, msrmMints } from '../config';
 
 export default async function initGroup(
@@ -7,7 +7,7 @@ export default async function initGroup(
   payer: Account,
   cluster: Cluster,
   groupName: string,
-  mangoProgramId: PublicKey,
+  entropyProgramId: PublicKey,
   serumProgramId: PublicKey,
   quoteSymbol: string,
   quoteMint: PublicKey,
@@ -21,16 +21,16 @@ export default async function initGroup(
     connection,
     payer,
     groupName,
-    mangoProgramId,
+    entropyProgramId,
     serumProgramId,
     quoteSymbol,
     quoteMint,
     validInterval,
   });
 
-  const client = new MangoClient(connection, mangoProgramId);
+  const client = new EntropyClient(connection, entropyProgramId);
 
-  const groupKey = await client.initMangoGroup(
+  const groupKey = await client.initEntropyGroup(
     quoteMint,
     msrmMints[cluster],
     serumProgramId,
@@ -41,7 +41,7 @@ export default async function initGroup(
     quoteMaxRate,
     payer,
   );
-  const group = await client.getMangoGroup(groupKey);
+  const group = await client.getEntropyGroup(groupKey);
   const banks = await group.loadRootBanks(connection);
   const tokenIndex = group.getTokenIndex(quoteMint);
   const nodeBanks = await banks[tokenIndex]?.loadNodeBanks(connection);
@@ -61,7 +61,7 @@ export default async function initGroup(
     name: groupName,
     publicKey: groupKey,
     quoteSymbol: quoteSymbol,
-    mangoProgramId: mangoProgramId,
+    entropyProgramId: entropyProgramId,
     serumProgramId: serumProgramId,
     tokens: [tokenDesc],
     oracles: [],

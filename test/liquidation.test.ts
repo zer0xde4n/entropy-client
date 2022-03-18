@@ -30,22 +30,22 @@ async function testPerpLiquidationAndBankruptcy() {
   );
 
   const testGroup = new TestGroup();
-  const mangoGroupKey = await testGroup.init();
-  const mangoGroup = await testGroup.client.getMangoGroup(mangoGroupKey);
+  const entropyGroupKey = await testGroup.init();
+  const entropyGroup = await testGroup.client.getEntropyGroup(entropyGroupKey);
   const perpMarkets = await Promise.all(
     [1, 3].map((marketIndex) => {
-      return mangoGroup.loadPerpMarket(connection, marketIndex, 6, 6);
+      return entropyGroup.loadPerpMarket(connection, marketIndex, 6, 6);
     }),
   );
 
-  let cache = await mangoGroup.loadCache(connection);
-  const rootBanks = await mangoGroup.loadRootBanks(connection);
+  let cache = await entropyGroup.loadCache(connection);
+  const rootBanks = await entropyGroup.loadRootBanks(connection);
   const quoteRootBank = rootBanks[QUOTE_INDEX];
   if (!quoteRootBank) {
     throw new Error('Quote Rootbank Not Found');
   }
   const quoteNodeBanks = await quoteRootBank.loadNodeBanks(connection);
-  const quoteTokenInfo = mangoGroup.tokens[QUOTE_INDEX];
+  const quoteTokenInfo = entropyGroup.tokens[QUOTE_INDEX];
   const quoteToken = new Token(
     connection,
     quoteTokenInfo.mint,
@@ -56,23 +56,23 @@ async function testPerpLiquidationAndBankruptcy() {
     payer.publicKey,
   );
 
-  const liqorPk = await testGroup.client.initMangoAccount(mangoGroup, payer);
-  const liqorAccount = await testGroup.client.getMangoAccount(
+  const liqorPk = await testGroup.client.initEntropyAccount(entropyGroup, payer);
+  const liqorAccount = await testGroup.client.getEntropyAccount(
     liqorPk,
-    mangoGroup.dexProgramId,
+    entropyGroup.dexProgramId,
   );
   console.log('Created Liqor:', liqorPk.toBase58());
 
-  const liqeePk = await testGroup.client.initMangoAccount(mangoGroup, payer);
-  const liqeeAccount = await testGroup.client.getMangoAccount(
+  const liqeePk = await testGroup.client.initEntropyAccount(entropyGroup, payer);
+  const liqeeAccount = await testGroup.client.getEntropyAccount(
     liqeePk,
-    mangoGroup.dexProgramId,
+    entropyGroup.dexProgramId,
   );
   console.log('Created Liqee:', liqeePk.toBase58());
 
   await testGroup.runKeeper();
   await testGroup.client.deposit(
-    mangoGroup,
+    entropyGroup,
     liqorAccount,
     payer,
     quoteRootBank.publicKey,
@@ -82,7 +82,7 @@ async function testPerpLiquidationAndBankruptcy() {
     1000,
   );
   await testGroup.client.deposit(
-    mangoGroup,
+    entropyGroup,
     liqeeAccount,
     payer,
     quoteRootBank.publicKey,
@@ -95,9 +95,9 @@ async function testPerpLiquidationAndBankruptcy() {
 
   console.log('Placing maker order');
   await testGroup.client.placePerpOrder(
-    mangoGroup,
+    entropyGroup,
     liqorAccount,
-    mangoGroup.mangoCache,
+    entropyGroup.entropyCache,
     perpMarkets[0],
     payer,
     'sell',
@@ -109,9 +109,9 @@ async function testPerpLiquidationAndBankruptcy() {
 
   console.log('Placing taker order');
   await testGroup.client.placePerpOrder(
-    mangoGroup,
+    entropyGroup,
     liqeeAccount,
-    mangoGroup.mangoCache,
+    entropyGroup.entropyCache,
     perpMarkets[0],
     payer,
     'buy',
@@ -144,22 +144,22 @@ async function testPerpLiquidationAndBankruptcy() {
   await testGroup.setOracle(1, 15000);
 
   await testGroup.runKeeper();
-  cache = await mangoGroup.loadCache(connection);
+  cache = await entropyGroup.loadCache(connection);
   await liqeeAccount.reload(testGroup.connection);
   await liqorAccount.reload(testGroup.connection);
 
   console.log(
     'Liqee Maint Health',
-    liqeeAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqeeAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
   console.log(
     'Liqor Maint Health',
-    liqorAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqorAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
 
   console.log('liquidatePerpMarket');
   await testGroup.client.liquidatePerpMarket(
-    mangoGroup,
+    entropyGroup,
     liqeeAccount,
     liqorAccount,
     perpMarkets[0],
@@ -172,17 +172,17 @@ async function testPerpLiquidationAndBankruptcy() {
 
   console.log(
     'Liqee Maint Health',
-    liqeeAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqeeAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
   console.log('Liqee Bankrupt', liqeeAccount.isBankrupt);
   console.log(
     'Liqor Maint Health',
-    liqorAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqorAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
 
   console.log('liquidateTokenAndPerp');
   await testGroup.client.liquidateTokenAndPerp(
-    mangoGroup,
+    entropyGroup,
     liqeeAccount,
     liqorAccount,
     quoteRootBank,
@@ -199,17 +199,17 @@ async function testPerpLiquidationAndBankruptcy() {
 
   console.log(
     'Liqee Maint Health',
-    liqeeAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqeeAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
   console.log('Liqee Bankrupt', liqeeAccount.isBankrupt);
   console.log(
     'Liqor Maint Health',
-    liqorAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqorAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
   if (liqeeAccount.isBankrupt) {
     console.log('resolvePerpBankruptcy');
     await testGroup.client.resolvePerpBankruptcy(
-      mangoGroup,
+      entropyGroup,
       liqeeAccount,
       liqorAccount,
       perpMarkets[0],
@@ -226,12 +226,12 @@ async function testPerpLiquidationAndBankruptcy() {
 
   console.log(
     'Liqee Maint Health',
-    liqeeAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqeeAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
   console.log('Liqee Bankrupt', liqeeAccount.isBankrupt);
   console.log(
     'Liqor Maint Health',
-    liqorAccount.getHealthRatio(mangoGroup, cache, 'Maint').toString(),
+    liqorAccount.getHealthRatio(entropyGroup, cache, 'Maint').toString(),
   );
 }
 

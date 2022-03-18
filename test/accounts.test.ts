@@ -1,13 +1,13 @@
 import fs from 'fs';
 import os from 'os';
-import { Cluster, Config, MangoClient, sleep } from '../src';
+import { Cluster, Config, EntropyClient, sleep } from '../src';
 import configFile from '../src/ids.json';
 import { Account, Commitment, Connection } from '@solana/web3.js';
 
 async function testAccounts() {
-  // Load all the details for mango group
-  const groupName = process.env.GROUP || 'mango_test_v3.nightly';
-  const cluster = (process.env.CLUSTER || 'devnet') as Cluster;
+  // Load all the details for entropy group
+  const groupName = process.env.GROUP || 'mainnet.2';
+  const cluster = (process.env.CLUSTER || 'mainnet') as Cluster;
   const sleepTime = 250;
   const config = new Config(configFile);
   const groupIds = config.getGroup(cluster, groupName);
@@ -16,8 +16,8 @@ async function testAccounts() {
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
-  const mangoProgramId = groupIds.mangoProgramId;
-  const mangoGroupKey = groupIds.publicKey;
+  const entropyProgramId = groupIds.entropyProgramId;
+  const entropyGroupKey = groupIds.publicKey;
   const payer = new Account(
     JSON.parse(
       process.env.KEYPAIR ||
@@ -29,12 +29,12 @@ async function testAccounts() {
     'processed' as Commitment,
   );
 
-  const client = new MangoClient(connection, mangoProgramId);
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const client = new EntropyClient(connection, entropyProgramId);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
 
   for (let i = 0; i < accounts; i++) {
     try {
-      await client.initMangoAccount(mangoGroup, payer);
+      await client.initEntropyAccount(entropyGroup, payer);
       console.log(`Created account ${i}/${accounts}`);
     } catch (err) {
       console.error('Failed to create account');

@@ -3,7 +3,7 @@ import os from 'os';
 import {
   Cluster,
   Config,
-  MangoClient,
+  EntropyClient,
   MAX_PAIRS,
   sleep,
   throwUndefined,
@@ -17,7 +17,7 @@ import { Market } from '@project-serum/serum';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 async function testSocializedLoss() {
-  // Load all the details for mango group
+  // Load all the details for entropy group
   const groupName = process.env.GROUP || 'devnet.3';
   const cluster = (process.env.CLUSTER || 'devnet') as Cluster;
   const sleepTime = 500;
@@ -27,8 +27,8 @@ async function testSocializedLoss() {
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
-  const mangoProgramId = groupIds.mangoProgramId;
-  const mangoGroupKey = groupIds.publicKey;
+  const entropyProgramId = groupIds.entropyProgramId;
+  const entropyGroupKey = groupIds.publicKey;
   const payer = new Account(
     JSON.parse(
       process.env.KEYPAIR ||
@@ -40,24 +40,24 @@ async function testSocializedLoss() {
     'processed' as Commitment,
   );
 
-  const client = new MangoClient(connection, mangoProgramId);
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
-  let rootBanks = await mangoGroup.loadRootBanks(connection);
+  const client = new EntropyClient(connection, entropyProgramId);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
+  let rootBanks = await entropyGroup.loadRootBanks(connection);
   const quoteRootBank = rootBanks[QUOTE_INDEX];
   if (!quoteRootBank) {
     throw new Error();
   }
   const quoteNodeBanks = await quoteRootBank.loadNodeBanks(connection);
 
-    const liqor = await client.initMangoAccount(mangoGroup, payer);
+    const liqor = await client.initEntropyAccount(entropyGroup, payer);
     console.log('Created Liqor:', liqor.toBase58());
     await sleep(sleepTime);
-    const liqorAccount = await client.getMangoAccount(
+    const liqorAccount = await client.getEntropyAccount(
       liqor,
-      mangoGroup.dexProgramId,
+      entropyGroup.dexProgramId,
     );
     const tokenConfig = groupIds.tokens[QUOTE_INDEX];
-    const tokenInfo = mangoGroup.tokens[QUOTE_INDEX];
+    const tokenInfo = entropyGroup.tokens[QUOTE_INDEX];
     const token = new Token(
       connection,
       tokenInfo.mint,
@@ -69,7 +69,7 @@ async function testSocializedLoss() {
     );
 
     await client.deposit(
-      mangoGroup,
+      entropyGroup,
       liqorAccount,
       payer,
       quoteRootBank.publicKey,
@@ -83,22 +83,22 @@ async function testSocializedLoss() {
     await liqorAccount.reload(connection);
     console.log('LIQOR', liqorAccount.publicKey.toBase58());
 
-    const mangoAccountPk = await client.initMangoAccount(mangoGroup, payer);
+    const entropyAccountPk = await client.initEntropyAccount(entropyGroup, payer);
     await sleep(sleepTime);
-    let mangoAccount = await client.getMangoAccount(
-      mangoAccountPk,
-      mangoGroup.dexProgramId,
+    let entropyAccount = await client.getEntropyAccount(
+      entropyAccountPk,
+      entropyGroup.dexProgramId,
     );
-    console.log('Created Liqee:', mangoAccountPk.toBase58());
+    console.log('Created Liqee:', entropyAccountPk.toBase58());
 
-    const cache = await mangoGroup.loadCache(connection);
+    const cache = await entropyGroup.loadCache(connection);
     // deposit
     await sleep(sleepTime / 2);
 
       const rayTokenConfig = groupIds.tokens[6];
-      const tokenIndex = mangoGroup.getTokenIndex(rayTokenConfig.mintKey);
+      const tokenIndex = entropyGroup.getTokenIndex(rayTokenConfig.mintKey);
       const rootBank = throwUndefined(rootBanks[tokenIndex]);
-    const rayTokenInfo = mangoGroup.tokens[tokenIndex];
+    const rayTokenInfo = entropyGroup.tokens[tokenIndex];
     console.log(rayTokenConfig.symbol)
       const rayToken = new Token(
         connection,
@@ -117,15 +117,15 @@ async function testSocializedLoss() {
     
     console.log('Resetting oracle');
       await client.setStubOracle(
-        mangoGroupKey,
-        mangoGroup.oracles[5],
+        entropyGroupKey,
+        entropyGroup.oracles[5],
         payer,
         10,
       );
       console.log('Depositing');
         await client.deposit(
-          mangoGroup,
-          mangoAccount,
+          entropyGroup,
+          entropyAccount,
           payer,
           rootBank.publicKey,
           banks[0].publicKey,
@@ -134,13 +134,13 @@ async function testSocializedLoss() {
           10,
         );
         await sleep(1000);
-    await mangoAccount.reload(connection, mangoGroup.dexProgramId);
-    console.log('Liqee Value', mangoAccount.getAssetsVal(mangoGroup, cache, 'Init').toString());
-    console.log(mangoAccount.toPrettyString(groupIds, mangoGroup, cache));
+    await entropyAccount.reload(connection, entropyGroup.dexProgramId);
+    console.log('Liqee Value', entropyAccount.getAssetsVal(entropyGroup, cache, 'Init').toString());
+    console.log(entropyAccount.toPrettyString(groupIds, entropyGroup, cache));
     console.log('withdrawing');
     await client.withdraw(
-      mangoGroup,
-      mangoAccount,
+      entropyGroup,
+      entropyAccount,
       payer,
       quoteRootBank.publicKey,
       quoteRootBank.nodeBanks[0],
@@ -149,28 +149,28 @@ async function testSocializedLoss() {
       true,
     );
 
-    await mangoAccount.reload(connection);
-    console.log('Liqee Health:', mangoAccount.getHealth(mangoGroup, cache, 'Maint').toString());
-    console.log('LIQEE', mangoAccount.publicKey.toBase58());
+    await entropyAccount.reload(connection);
+    console.log('Liqee Health:', entropyAccount.getHealth(entropyGroup, cache, 'Maint').toString());
+    console.log('LIQEE', entropyAccount.publicKey.toBase58());
 
     await client.setStubOracle(
-        mangoGroupKey,
-        mangoGroup.oracles[5],
+        entropyGroupKey,
+        entropyGroup.oracles[5],
         payer,
         0.5,
     );
 
-    rootBanks = await mangoGroup.loadRootBanks(connection);
+    rootBanks = await entropyGroup.loadRootBanks(connection);
     let assetRootBank = rootBanks[5];
     let liabRootBank = rootBanks[QUOTE_INDEX];
     if (!liabRootBank || !assetRootBank) {
         throw new Error('Root Banks not found');
     }
-    const liabAmount = mangoAccount.getNativeBorrow(liabRootBank, QUOTE_INDEX);
+    const liabAmount = entropyAccount.getNativeBorrow(liabRootBank, QUOTE_INDEX);
 
     await sleep(1000);
 
-    rootBanks = await mangoGroup.loadRootBanks(connection);
+    rootBanks = await entropyGroup.loadRootBanks(connection);
     assetRootBank = rootBanks[5];
     liabRootBank = rootBanks[QUOTE_INDEX];
     if (!liabRootBank || !assetRootBank) {
@@ -181,11 +181,11 @@ async function testSocializedLoss() {
     console.log('PreLiq', preLiqQuoteDeposits.toString());
 
     console.log('Liquidating');
-    await client.liquidateTokenAndToken(mangoGroup, mangoAccount, liqorAccount, assetRootBank, liabRootBank, payer, I80F48.fromNumber(Math.abs(liabAmount.toNumber())));
-    await mangoAccount.reload(connection, mangoGroup.dexProgramId);
+    await client.liquidateTokenAndToken(entropyGroup, entropyAccount, liqorAccount, assetRootBank, liabRootBank, payer, I80F48.fromNumber(Math.abs(liabAmount.toNumber())));
+    await entropyAccount.reload(connection, entropyGroup.dexProgramId);
     await sleep(1000);
 
-    rootBanks = await mangoGroup.loadRootBanks(connection);
+    rootBanks = await entropyGroup.loadRootBanks(connection);
     assetRootBank = rootBanks[5];
     liabRootBank = rootBanks[QUOTE_INDEX];
     if (!liabRootBank || !assetRootBank) {
@@ -195,15 +195,15 @@ async function testSocializedLoss() {
     const preLossQuoteDeposits = liabRootBank.getNativeTotalDeposit();
     console.log('Pre', preLossQuoteDeposits.toString());
 
-    if (mangoAccount.isBankrupt) {
+    if (entropyAccount.isBankrupt) {
         console.log('resolveTokenBankruptcy');
-        await client.resolveTokenBankruptcy(mangoGroup, mangoAccount, liqorAccount, quoteRootBank, liabRootBank, payer, I80F48.fromNumber(Math.abs(mangoAccount.getNativeBorrow(liabRootBank, QUOTE_INDEX).toNumber())));
+        await client.resolveTokenBankruptcy(entropyGroup, entropyAccount, liqorAccount, quoteRootBank, liabRootBank, payer, I80F48.fromNumber(Math.abs(entropyAccount.getNativeBorrow(liabRootBank, QUOTE_INDEX).toNumber())));
     } else {
         console.log('Account was not bankrupt');
     }
     await sleep(5000);
     
-    rootBanks = await mangoGroup.loadRootBanks(connection);
+    rootBanks = await entropyGroup.loadRootBanks(connection);
     assetRootBank = rootBanks[5];
     liabRootBank = rootBanks[QUOTE_INDEX];
     if (!liabRootBank || !assetRootBank) {

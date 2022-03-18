@@ -10,7 +10,7 @@ import {
   findLargestTokenAccountForOwner,
   GroupConfig,
   IDS,
-  MangoClient,
+  EntropyClient,
   QUOTE_INDEX,
   RootBank,
 } from '../src';
@@ -29,50 +29,50 @@ const payer = new Account(
 const groupName = process.env.GROUP || 'mainnet.2';
 const groupIds = config.getGroupWithName(groupName) as GroupConfig;
 const cluster = groupIds.cluster;
-const mangoProgramId = groupIds.mangoProgramId;
-const mangoGroupKey = groupIds.publicKey;
+const entropyProgramId = groupIds.entropyProgramId;
+const entropyGroupKey = groupIds.publicKey;
 const connection = new Connection(
   process.env.ENDPOINT_URL || config.cluster_urls[cluster],
   'processed' as Commitment,
 );
-const client = new MangoClient(connection, mangoProgramId);
+const client = new EntropyClient(connection, entropyProgramId);
 
 const accountReimbursements = [
   {
-    mangoAccountPubkey: '2djENyoL1HhRj3dELXv2N5z6buuyinrGfTd7Dn9asvST',
+    entropyAccountPubkey: '2djENyoL1HhRj3dELXv2N5z6buuyinrGfTd7Dn9asvST',
     amount: 76723.12,
   },
   {
-    mangoAccountPubkey: '2nxUQGyysW7FB7apwjkFdnReZq2bA1JmgqT67fdaRUTE',
+    entropyAccountPubkey: '2nxUQGyysW7FB7apwjkFdnReZq2bA1JmgqT67fdaRUTE',
     amount: 2056.63,
   },
   {
-    mangoAccountPubkey: '62tjaFUr1cjTyHbZWzo6UW2NYEmuXzxWdLZhJ7mMxUxw',
+    entropyAccountPubkey: '62tjaFUr1cjTyHbZWzo6UW2NYEmuXzxWdLZhJ7mMxUxw',
     amount: 10436.11,
   },
 ];
 
 async function reimburse() {
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
-  const rootBanks = await mangoGroup.loadRootBanks(connection);
+  const entropyGroup = await client.getEntropyGroup(entropyGroupKey);
+  const rootBanks = await entropyGroup.loadRootBanks(connection);
   const quoteRootBank = rootBanks[QUOTE_INDEX] as RootBank;
   const nodeBank = quoteRootBank.nodeBankAccounts[0];
 
   const quoteTokenAccount = await findLargestTokenAccountForOwner(
     connection,
     payer.publicKey,
-    mangoGroup.tokens[QUOTE_INDEX].mint,
+    entropyGroup.tokens[QUOTE_INDEX].mint,
   );
 
   for (const info of accountReimbursements) {
-    const mangoAccount = await client.getMangoAccount(
-      new PublicKey(info.mangoAccountPubkey),
-      mangoGroup.dexProgramId,
+    const entropyAccount = await client.getEntropyAccount(
+      new PublicKey(info.entropyAccountPubkey),
+      entropyGroup.dexProgramId,
     );
 
     const txid = await client.deposit(
-      mangoGroup,
-      mangoAccount,
+      entropyGroup,
+      entropyAccount,
       payer,
       quoteRootBank.publicKey,
       nodeBank.publicKey,
@@ -83,7 +83,7 @@ async function reimburse() {
     console.log(
       `txid: ${txid.toString()}\nSuccessfully reimbursed ${
         info.amount
-      } to ${mangoAccount.publicKey.toBase58()}.`,
+      } to ${entropyAccount.publicKey.toBase58()}.`,
     );
   }
 }

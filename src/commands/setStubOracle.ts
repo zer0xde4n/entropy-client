@@ -1,5 +1,5 @@
 import { Account, Connection } from '@solana/web3.js';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import { getOracleBySymbol, GroupConfig, OracleConfig } from '../config';
 
 export default async function setStubOracle(
@@ -9,7 +9,7 @@ export default async function setStubOracle(
   symbol: string,
   value: number,
 ) {
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
   const oracle = getOracleBySymbol(groupConfig, symbol) as OracleConfig;
   await client.setStubOracle(
     groupConfig.publicKey,

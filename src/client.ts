@@ -30,10 +30,10 @@ import {
   AssetType,
   BookSideLayout,
   FREE_ORDER_SLOT,
-  MangoAccountLayout,
-  MangoCache,
-  MangoCacheLayout,
-  MangoGroupLayout,
+  EntropyAccountLayout,
+  EntropyCache,
+  EntropyCacheLayout,
+  EntropyGroupLayout,
   NodeBankLayout,
   PerpEventLayout,
   PerpEventQueueHeaderLayout,
@@ -42,11 +42,11 @@ import {
   RootBankLayout,
   StubOracleLayout,
 } from './layout';
-import MangoAccount from './MangoAccount';
+import EntropyAccount from './EntropyAccount';
 import PerpMarket from './PerpMarket';
 import RootBank from './RootBank';
 import {
-  makeAddMangoAccountInfoInstruction,
+  makeAddEntropyAccountInfoInstruction,
   makeAddOracleInstruction,
   makeAddPerpMarketInstruction,
   makeAddPerpTriggerOrderInstruction,
@@ -67,8 +67,8 @@ import {
   makeForceCancelPerpOrdersInstruction,
   makeForceCancelSpotOrdersInstruction,
   makeInitAdvancedOrdersInstruction,
-  makeInitMangoAccountInstruction,
-  makeInitMangoGroupInstruction,
+  makeInitEntropyAccountInstruction,
+  makeInitEntropyGroupInstruction,
   makeInitSpotOpenOrdersInstruction,
   makeLiquidatePerpMarketInstruction,
   makeLiquidateTokenAndPerpInstruction,
@@ -112,21 +112,21 @@ import {
   Token,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import MangoGroup from './MangoGroup';
-import { MangoError, TimeoutError } from '.';
+import EntropyGroup from './EntropyGroup';
+import { EntropyError, TimeoutError } from '.';
 
 export const getUnixTs = () => {
   return new Date().getTime() / 1000;
 };
 
 /**
- * A class for interacting with the Mango V3 Program
+ * A class for interacting with the Entropy V3 Program
  *
  * @param connection A solana web.js Connection object
- * @param programId The PublicKey of the Mango V3 Program
- * @param opts An object used to configure the MangoClient. Accepts a postSendTxCallback
+ * @param programId The PublicKey of the Entropy V3 Program
+ * @param opts An object used to configure the EntropyClient. Accepts a postSendTxCallback
  */
-export class MangoClient {
+export class EntropyClient {
   connection: Connection;
   programId: PublicKey;
   lastSlot: number;
@@ -219,7 +219,7 @@ export class MangoClient {
 
   // TODO - switch Account to Keypair and switch off setSigners due to deprecated
   /**
-   * Send a transaction using the Solana Web3.js connection on the mango client
+   * Send a transaction using the Solana Web3.js connection on the entropy client
    *
    * @param transaction
    * @param payer
@@ -303,7 +303,7 @@ export class MangoClient {
           for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
             const line = simulateResult.logs[i];
             if (line.startsWith('Program log: ')) {
-              throw new MangoError({
+              throw new EntropyError({
                 message:
                 new Date().toISOString() + `${marketName} Transaction failed: ` + line.slice('Program log: '.length),
                 txid,
@@ -311,12 +311,12 @@ export class MangoClient {
             }
           }
         }
-        throw new MangoError({
+        throw new EntropyError({
           message: JSON.stringify(simulateResult.err),
           txid,
         });
       }
-      throw new MangoError({ message: new Date().toISOString() + ' Transaction failed', txid
+      throw new EntropyError({ message: new Date().toISOString() + ' Transaction failed', txid
      });
     } finally {
       done = true;
@@ -392,7 +392,7 @@ export class MangoClient {
           for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
             const line = simulateResult.logs[i];
             if (line.startsWith('Program log: ')) {
-              throw new MangoError({
+              throw new EntropyError({
                 message:
                   'Transaction failed: ' + line.slice('Program log: '.length),
                 txid,
@@ -400,12 +400,12 @@ export class MangoClient {
             }
           }
         }
-        throw new MangoError({
+        throw new EntropyError({
           message: JSON.stringify(simulateResult.err),
           txid,
         });
       }
-      throw new MangoError({ message: 'Transaction failed', txid });
+      throw new EntropyError({ message: 'Transaction failed', txid });
     } finally {
       done = true;
     }
@@ -517,13 +517,13 @@ export class MangoClient {
   }
 
   /**
-   * Create a new Mango group
+   * Create a new Entropy group
    */
-  async initMangoGroup(
+  async initEntropyGroup(
     quoteMint: PublicKey,
     msrmMint: PublicKey,
     dexProgram: PublicKey,
-    feesVault: PublicKey, // owned by Mango DAO token governance
+    feesVault: PublicKey, // owned by Entropy DAO token governance
     validInterval: number,
     quoteOptimalUtil: number,
     quoteOptimalRate: number,
@@ -533,7 +533,7 @@ export class MangoClient {
     const accountInstruction = await createAccountInstruction(
       this.connection,
       payer.publicKey,
-      MangoGroupLayout.span,
+      EntropyGroupLayout.span,
       this.programId,
     );
     const { signerKey, signerNonce } = await createSignerKeyAndNonce(
@@ -575,7 +575,7 @@ export class MangoClient {
     const cacheAccountInstruction = await createAccountInstruction(
       this.connection,
       payer.publicKey,
-      MangoCacheLayout.span,
+      EntropyCacheLayout.span,
       this.programId,
     );
 
@@ -618,7 +618,7 @@ export class MangoClient {
       msrmVaultPk = zeroKey;
     }
 
-    const initMangoGroupInstruction = makeInitMangoGroupInstruction(
+    const initEntropyGroupInstruction = makeInitEntropyGroupInstruction(
       this.programId,
       accountInstruction.account.publicKey,
       signerKey,
@@ -639,42 +639,42 @@ export class MangoClient {
       I80F48.fromNumber(quoteMaxRate),
     );
 
-    const initMangoGroupTransaction = new Transaction();
-    initMangoGroupTransaction.add(initMangoGroupInstruction);
-    await this.sendTransaction(initMangoGroupTransaction, payer, []);
+    const initEntropyGroupTransaction = new Transaction();
+    initEntropyGroupTransaction.add(initEntropyGroupInstruction);
+    await this.sendTransaction(initEntropyGroupTransaction, payer, []);
 
     return accountInstruction.account.publicKey;
   }
 
   /**
-   * Retrieve information about a Mango Group
+   * Retrieve information about a Entropy Group
    */
-  async getMangoGroup(mangoGroup: PublicKey): Promise<MangoGroup> {
-    const accountInfo = await this.connection.getAccountInfo(mangoGroup);
-    const decoded = MangoGroupLayout.decode(
+  async getEntropyGroup(entropyGroup: PublicKey): Promise<EntropyGroup> {
+    const accountInfo = await this.connection.getAccountInfo(entropyGroup);
+    const decoded = EntropyGroupLayout.decode(
       accountInfo == null ? undefined : accountInfo.data,
     );
 
-    return new MangoGroup(mangoGroup, decoded);
+    return new EntropyGroup(entropyGroup, decoded);
   }
 
   /**
-   * Create a new Mango Account on a given group
+   * Create a new Entropy Account on a given group
    */
-  async initMangoAccount(
-    mangoGroup: MangoGroup,
+  async initEntropyAccount(
+    entropyGroup: EntropyGroup,
     owner: Account | WalletAdapter,
   ): Promise<PublicKey> {
     const accountInstruction = await createAccountInstruction(
       this.connection,
       owner.publicKey,
-      MangoAccountLayout.span,
+      EntropyAccountLayout.span,
       this.programId,
     );
 
-    const initMangoAccountInstruction = makeInitMangoAccountInstruction(
+    const initEntropyAccountInstruction = makeInitEntropyAccountInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       accountInstruction.account.publicKey,
       owner.publicKey,
     );
@@ -682,7 +682,7 @@ export class MangoClient {
     // Add all instructions to one atomic transaction
     const transaction = new Transaction();
     transaction.add(accountInstruction.instruction);
-    transaction.add(initMangoAccountInstruction);
+    transaction.add(initEntropyAccountInstruction);
 
     const additionalSigners = [accountInstruction.account];
     await this.sendTransaction(transaction, owner, additionalSigners);
@@ -691,26 +691,26 @@ export class MangoClient {
   }
 
   /**
-   * Retrieve information about a Mango Account
+   * Retrieve information about a Entropy Account
    */
-  async getMangoAccount(
-    mangoAccountPk: PublicKey,
+  async getEntropyAccount(
+    entropyAccountPk: PublicKey,
     dexProgramId: PublicKey,
-  ): Promise<MangoAccount> {
+  ): Promise<EntropyAccount> {
     const acc = await this.connection.getAccountInfo(
-      mangoAccountPk,
+      entropyAccountPk,
       'processed',
     );
-    const mangoAccount = new MangoAccount(
-      mangoAccountPk,
-      MangoAccountLayout.decode(acc == null ? undefined : acc.data),
+    const entropyAccount = new EntropyAccount(
+      entropyAccountPk,
+      EntropyAccountLayout.decode(acc == null ? undefined : acc.data),
     );
-    await mangoAccount.loadOpenOrders(this.connection, dexProgramId);
-    return mangoAccount;
+    await entropyAccount.loadOpenOrders(this.connection, dexProgramId);
+    return entropyAccount;
   }
 
   /**
-   * Create a new Mango Account and deposit some tokens in a single transaction
+   * Create a new Entropy Account and deposit some tokens in a single transaction
    *
    * @param rootBank The RootBank for the deposit currency
    * @param nodeBank The NodeBank asociated with the RootBank
@@ -718,8 +718,8 @@ export class MangoClient {
    * @param tokenAcc The token account to transfer from
    * @param info An optional UI name for the account
    */
-  async initMangoAccountAndDeposit(
-    mangoGroup: MangoGroup,
+  async initEntropyAccountAndDeposit(
+    entropyGroup: EntropyGroup,
     owner: Account | WalletAdapter,
     rootBank: PublicKey,
     nodeBank: PublicKey,
@@ -733,24 +733,24 @@ export class MangoClient {
     const accountInstruction = await createAccountInstruction(
       this.connection,
       owner.publicKey,
-      MangoAccountLayout.span,
+      EntropyAccountLayout.span,
       this.programId,
     );
 
-    const initMangoAccountInstruction = makeInitMangoAccountInstruction(
+    const initEntropyAccountInstruction = makeInitEntropyAccountInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       accountInstruction.account.publicKey,
       owner.publicKey,
     );
 
     transaction.add(accountInstruction.instruction);
-    transaction.add(initMangoAccountInstruction);
+    transaction.add(initEntropyAccountInstruction);
 
     const additionalSigners = [accountInstruction.account];
 
-    const tokenIndex = mangoGroup.getRootBankIndex(rootBank);
-    const tokenMint = mangoGroup.tokens[tokenIndex].mint;
+    const tokenIndex = entropyGroup.getRootBankIndex(rootBank);
+    const tokenMint = entropyGroup.tokens[tokenIndex].mint;
 
     let wrappedSolAccount: Account | null = null;
     if (
@@ -782,14 +782,14 @@ export class MangoClient {
 
     const nativeQuantity = uiToNative(
       quantity,
-      mangoGroup.tokens[tokenIndex].decimals,
+      entropyGroup.tokens[tokenIndex].decimals,
     );
 
     const instruction = makeDepositInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       owner.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.entropyCache,
       accountInstruction.account.publicKey,
       rootBank,
       nodeBank,
@@ -800,9 +800,9 @@ export class MangoClient {
     transaction.add(instruction);
 
     if (info) {
-      const addAccountNameinstruction = makeAddMangoAccountInfoInstruction(
+      const addAccountNameinstruction = makeAddEntropyAccountInfoInstruction(
         this.programId,
-        mangoGroup.publicKey,
+        entropyGroup.publicKey,
         accountInstruction.account.publicKey,
         owner.publicKey,
         info,
@@ -826,7 +826,7 @@ export class MangoClient {
   }
 
   /**
-   * Deposit tokens in a Mango Account
+   * Deposit tokens in a Entropy Account
    *
    * @param rootBank The RootBank for the deposit currency
    * @param nodeBank The NodeBank asociated with the RootBank
@@ -834,8 +834,8 @@ export class MangoClient {
    * @param tokenAcc The token account to transfer from
    */
   async deposit(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     rootBank: PublicKey,
     nodeBank: PublicKey,
@@ -846,8 +846,8 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const transaction = new Transaction();
     const additionalSigners: Array<Account> = [];
-    const tokenIndex = mangoGroup.getRootBankIndex(rootBank);
-    const tokenMint = mangoGroup.tokens[tokenIndex].mint;
+    const tokenIndex = entropyGroup.getRootBankIndex(rootBank);
+    const tokenMint = entropyGroup.tokens[tokenIndex].mint;
 
     let wrappedSolAccount: Account | null = null;
     if (
@@ -879,15 +879,15 @@ export class MangoClient {
 
     const nativeQuantity = uiToNative(
       quantity,
-      mangoGroup.tokens[tokenIndex].decimals,
+      entropyGroup.tokens[tokenIndex].decimals,
     );
 
     const instruction = makeDepositInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       owner.publicKey,
-      mangoGroup.mangoCache,
-      mangoAccount.publicKey,
+      entropyGroup.entropyCache,
+      entropyAccount.publicKey,
       rootBank,
       nodeBank,
       vault,
@@ -911,7 +911,7 @@ export class MangoClient {
   }
 
   /**
-   * Deposit tokens in a Mango Account
+   * Deposit tokens in a Entropy Account
    *
    * @param rootBank The RootBank for the withdrawn currency
    * @param nodeBank The NodeBank asociated with the RootBank
@@ -919,8 +919,8 @@ export class MangoClient {
    * @param allowBorrow Whether to borrow tokens if there are not enough deposits for the withdrawal
    */
   async withdraw(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     rootBank: PublicKey,
     nodeBank: PublicKey,
@@ -931,8 +931,8 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const transaction = new Transaction();
     const additionalSigners: Account[] = [];
-    const tokenIndex = mangoGroup.getRootBankIndex(rootBank);
-    const tokenMint = mangoGroup.tokens[tokenIndex].mint;
+    const tokenIndex = entropyGroup.getRootBankIndex(rootBank);
+    const tokenMint = entropyGroup.tokens[tokenIndex].mint;
 
     let tokenAcc = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -988,21 +988,21 @@ export class MangoClient {
 
     const nativeQuantity = uiToNative(
       quantity,
-      mangoGroup.tokens[tokenIndex].decimals,
+      entropyGroup.tokens[tokenIndex].decimals,
     );
 
     const instruction = makeWithdrawInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.entropyCache,
       rootBank,
       nodeBank,
       vault,
       tokenAcc,
-      mangoGroup.signerKey,
-      mangoAccount.spotOpenOrders,
+      entropyGroup.signerKey,
+      entropyAccount.spotOpenOrders,
       nativeQuantity,
       allowBorrow,
     );
@@ -1025,15 +1025,15 @@ export class MangoClient {
    * Called by the Keeper to cache interest rates from the RootBanks
    */
   async cacheRootBanks(
-    mangoGroup: PublicKey,
-    mangoCache: PublicKey,
+    entropyGroup: PublicKey,
+    entropyCache: PublicKey,
     rootBanks: PublicKey[],
     payer: Account | WalletAdapter,
   ): Promise<TransactionSignature> {
     const cacheRootBanksInstruction = makeCacheRootBankInstruction(
       this.programId,
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       rootBanks,
     );
 
@@ -1047,15 +1047,15 @@ export class MangoClient {
    * Called by the Keeper to cache prices from the Oracles
    */
   async cachePrices(
-    mangoGroup: PublicKey,
-    mangoCache: PublicKey,
+    entropyGroup: PublicKey,
+    entropyCache: PublicKey,
     oracles: PublicKey[],
     payer: Account | WalletAdapter,
   ): Promise<TransactionSignature> {
     const cachePricesInstruction = makeCachePricesInstruction(
       this.programId,
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       oracles,
     );
 
@@ -1069,15 +1069,15 @@ export class MangoClient {
    * Called by the Keeper to cache perp market funding
    */
   async cachePerpMarkets(
-    mangoGroup: PublicKey,
-    mangoCache: PublicKey,
+    entropyGroup: PublicKey,
+    entropyCache: PublicKey,
     perpMarkets: PublicKey[],
     payer: Account,
   ): Promise<TransactionSignature> {
     const cachePerpMarketsInstruction = makeCachePerpMarketsInstruction(
       this.programId,
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       perpMarkets,
     );
 
@@ -1091,15 +1091,15 @@ export class MangoClient {
    * Called by the Keeper to update interest rates on the RootBanks
    */
   async updateRootBank(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     rootBank: PublicKey,
     nodeBanks: PublicKey[],
     payer: Account | WalletAdapter,
   ): Promise<TransactionSignature> {
     const updateRootBanksInstruction = makeUpdateRootBankInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       rootBank,
       nodeBanks,
     );
@@ -1114,19 +1114,19 @@ export class MangoClient {
    * Called by the Keeper to process events on the Perp order book
    */
   async consumeEvents(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     perpMarket: PerpMarket,
-    mangoAccounts: PublicKey[],
+    entropyAccounts: PublicKey[],
     payer: Account,
     limit: BN,
   ): Promise<TransactionSignature> {
     const consumeEventsInstruction = makeConsumeEventsInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       perpMarket.publicKey,
       perpMarket.eventQueue,
-      mangoAccounts,
+      entropyAccounts,
       limit,
     );
 
@@ -1140,8 +1140,8 @@ export class MangoClient {
    * Called by the Keeper to update funding on the perp markets
    */
   async updateFunding(
-    mangoGroup: PublicKey,
-    mangoCache: PublicKey,
+    entropyGroup: PublicKey,
+    entropyCache: PublicKey,
     perpMarket: PublicKey,
     bids: PublicKey,
     asks: PublicKey,
@@ -1149,8 +1149,8 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const updateFundingInstruction = makeUpdateFundingInstruction(
       this.programId,
-      mangoGroup,
-      mangoCache,
+      entropyGroup,
+      entropyCache,
       perpMarket,
       bids,
       asks,
@@ -1187,9 +1187,9 @@ export class MangoClient {
    * @param bookSideInfo Account info for asks if side === bid, bids if side === ask. If this is given, crank instruction is added
    */
   async placePerpOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
-    mangoCache: PublicKey, // TODO - remove; already in MangoGroup
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
+    entropyCache: PublicKey, // TODO - remove; already in EntropyGroup
     perpMarket: PerpMarket,
     owner: Account | WalletAdapter,
 
@@ -1210,15 +1210,15 @@ export class MangoClient {
 
     const instruction = makePlacePerpOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoCache,
+      entropyCache,
       perpMarket.publicKey,
       perpMarket.bids,
       perpMarket.asks,
       perpMarket.eventQueue,
-      mangoAccount.spotOpenOrders,
+      entropyAccount.spotOpenOrders,
       nativePrice,
       nativeQuantity,
       new BN(clientOrderId),
@@ -1237,7 +1237,7 @@ export class MangoClient {
           )
         : [];
       const accounts: Set<string> = new Set();
-      accounts.add(mangoAccount.publicKey.toBase58());
+      accounts.add(entropyAccount.publicKey.toBase58());
 
       for (const order of bookSide) {
         accounts.add(order.owner.toBase58());
@@ -1248,8 +1248,8 @@ export class MangoClient {
 
       const consumeInstruction = makeConsumeEventsInstruction(
         this.programId,
-        mangoGroup.publicKey,
-        mangoGroup.mangoCache,
+        entropyGroup.publicKey,
+        entropyGroup.entropyCache,
         perpMarket.publicKey,
         perpMarket.eventQueue,
         Array.from(accounts)
@@ -1269,8 +1269,8 @@ export class MangoClient {
    * @param invalidIdOk Don't throw error if order is invalid
    */
   async cancelPerpOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     perpMarket: PerpMarket,
     order: PerpOrder,
@@ -1278,8 +1278,8 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const instruction = makeCancelPerpOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
       perpMarket.publicKey,
       perpMarket.bids,
@@ -1299,9 +1299,9 @@ export class MangoClient {
    * Cancel all perp orders across all markets
    */
   async cancelAllPerpOrders(
-    group: MangoGroup,
+    group: EntropyGroup,
     perpMarkets: PerpMarket[],
-    mangoAccount: MangoAccount,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
   ): Promise<TransactionSignature[]> {
     let tx = new Transaction();
@@ -1309,9 +1309,9 @@ export class MangoClient {
 
     // Determine which market indexes have open orders
     const hasOrders = new Array(group.perpMarkets.length).fill(false);
-    for (let i = 0; i < mangoAccount.orderMarket.length; i++) {
-      if (mangoAccount.orderMarket[i] !== FREE_ORDER_SLOT) {
-        hasOrders[mangoAccount.orderMarket[i]] = true;
+    for (let i = 0; i < entropyAccount.orderMarket.length; i++) {
+      if (entropyAccount.orderMarket[i] !== FREE_ORDER_SLOT) {
+        hasOrders[entropyAccount.orderMarket[i]] = true;
       }
     }
 
@@ -1328,7 +1328,7 @@ export class MangoClient {
       const cancelAllInstr = makeCancelAllPerpOrdersInstruction(
         this.programId,
         group.publicKey,
-        mangoAccount.publicKey,
+        entropyAccount.publicKey,
         owner.publicKey,
         perpMarket.publicKey,
         perpMarket.bids,
@@ -1394,13 +1394,13 @@ export class MangoClient {
    * Add a new oracle to a group
    */
   async addOracle(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     oracle: PublicKey,
     admin: Account,
   ): Promise<TransactionSignature> {
     const instruction = makeAddOracleInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       oracle,
       admin.publicKey,
     );
@@ -1416,14 +1416,14 @@ export class MangoClient {
    * Set the price of a 'stub' type oracle
    */
   async setOracle(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     oracle: PublicKey,
     admin: Account,
     price: I80F48,
   ): Promise<TransactionSignature> {
     const instruction = makeSetOracleInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       oracle,
       admin.publicKey,
       price,
@@ -1437,7 +1437,7 @@ export class MangoClient {
   }
 
   async addSpotMarket(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     oracle: PublicKey,
     spotMarket: PublicKey,
     mint: PublicKey,
@@ -1457,7 +1457,7 @@ export class MangoClient {
       admin.publicKey,
       vaultAccount.publicKey,
       mint,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
     );
 
     const nodeBankAccountInstruction = await createAccountInstruction(
@@ -1475,10 +1475,10 @@ export class MangoClient {
 
     const instruction = makeAddSpotMarketInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       oracle,
       spotMarket,
-      mangoGroup.dexProgramId,
+      entropyGroup.dexProgramId,
       mint,
       nodeBankAccountInstruction.account.publicKey,
       vaultAccount.publicKey,
@@ -1506,12 +1506,12 @@ export class MangoClient {
   }
 
   /**
-   * Make sure mangoAccount has recent and valid inMarginBasket and spotOpenOrders
+   * Make sure entropyAccount has recent and valid inMarginBasket and spotOpenOrders
    */
   async placeSpotOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
-    mangoCache: PublicKey,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
+    entropyCache: PublicKey,
     spotMarket: Market,
     owner: Account | WalletAdapter,
 
@@ -1525,7 +1525,7 @@ export class MangoClient {
     const maxBaseQuantity = spotMarket.baseSizeNumberToLots(size);
 
     // TODO implement srm vault fee discount
-    // const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
+    // const feeTier = getFeeTier(0, nativeToUi(entropyGroup.nativeSrm || 0, SRM_DECIMALS));
     const feeTier = getFeeTier(0, nativeToUi(0, 0));
     const rates = getFeeRates(feeTier);
     const maxQuoteQuantity = new BN(
@@ -1545,15 +1545,15 @@ export class MangoClient {
     const selfTradeBehavior = 'decrementTake';
     clientId = clientId ?? new BN(Date.now());
 
-    const spotMarketIndex = mangoGroup.getSpotMarketIndex(spotMarket.publicKey);
+    const spotMarketIndex = entropyGroup.getSpotMarketIndex(spotMarket.publicKey);
 
-    if (!mangoGroup.rootBankAccounts.filter((a) => !!a).length) {
-      await mangoGroup.loadRootBanks(this.connection);
+    if (!entropyGroup.rootBankAccounts.filter((a) => !!a).length) {
+      await entropyGroup.loadRootBanks(this.connection);
     }
 
-    const baseRootBank = mangoGroup.rootBankAccounts[spotMarketIndex];
+    const baseRootBank = entropyGroup.rootBankAccounts[spotMarketIndex];
     const baseNodeBank = baseRootBank?.nodeBankAccounts[0];
-    const quoteRootBank = mangoGroup.rootBankAccounts[QUOTE_INDEX];
+    const quoteRootBank = entropyGroup.rootBankAccounts[QUOTE_INDEX];
     const quoteNodeBank = quoteRootBank?.nodeBankAccounts[0];
 
     if (!baseRootBank || !baseNodeBank || !quoteRootBank || !quoteNodeBank) {
@@ -1566,17 +1566,17 @@ export class MangoClient {
 
     // Only pass in open orders if in margin basket or current market index, and
     // the only writable account should be OpenOrders for current market index
-    for (let i = 0; i < mangoAccount.spotOpenOrders.length; i++) {
+    for (let i = 0; i < entropyAccount.spotOpenOrders.length; i++) {
       let pubkey = zeroKey;
       let isWritable = false;
 
       if (i === spotMarketIndex) {
         isWritable = true;
 
-        if (mangoAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
+        if (entropyAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
           // open orders missing for this market; create a new one now
           const openOrdersSpace = OpenOrders.getLayout(
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
           ).span;
 
           const openOrdersLamports =
@@ -1589,19 +1589,19 @@ export class MangoClient {
             this.connection,
             owner.publicKey,
             openOrdersSpace,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
             openOrdersLamports,
           );
 
           const initOpenOrders = makeInitSpotOpenOrdersInstruction(
             this.programId,
-            mangoGroup.publicKey,
-            mangoAccount.publicKey,
+            entropyGroup.publicKey,
+            entropyAccount.publicKey,
             owner.publicKey,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
             accInstr.account.publicKey,
             spotMarket.publicKey,
-            mangoGroup.signerKey,
+            entropyGroup.signerKey,
           );
 
           const initTx = new Transaction();
@@ -1613,10 +1613,10 @@ export class MangoClient {
 
           pubkey = accInstr.account.publicKey;
         } else {
-          pubkey = mangoAccount.spotOpenOrders[i];
+          pubkey = entropyAccount.spotOpenOrders[i];
         }
-      } else if (mangoAccount.inMarginBasket[i]) {
-        pubkey = mangoAccount.spotOpenOrders[i];
+      } else if (entropyAccount.inMarginBasket[i]) {
+        pubkey = entropyAccount.spotOpenOrders[i];
       }
 
       openOrdersKeys.push({ pubkey, isWritable });
@@ -1632,10 +1632,10 @@ export class MangoClient {
 
     const placeOrderInstruction = makePlaceSpotOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoCache,
+      entropyCache,
       spotMarket.programId,
       spotMarket.publicKey,
       spotMarket['_decoded'].bids,
@@ -1650,9 +1650,9 @@ export class MangoClient {
       quoteRootBank.publicKey,
       quoteNodeBank.publicKey,
       quoteNodeBank.vault,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       dexSigner,
-      mangoGroup.srmVault, // TODO: choose msrm vault if it has any deposits
+      entropyGroup.srmVault, // TODO: choose msrm vault if it has any deposits
       openOrdersKeys,
       side,
       limitPrice,
@@ -1667,7 +1667,7 @@ export class MangoClient {
     if (spotMarketIndex > 0) {
       console.log(new Date().toISOString(), 
         spotMarketIndex - 1,
-        mangoAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
+        entropyAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
       );
     }
@@ -1678,13 +1678,13 @@ export class MangoClient {
       additionalSigners,
     );
 
-    // update MangoAccount to have new OpenOrders pubkey
-    mangoAccount.spotOpenOrders[spotMarketIndex] =
+    // update EntropyAccount to have new OpenOrders pubkey
+    entropyAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
-    mangoAccount.inMarginBasket[spotMarketIndex] = true;
+    entropyAccount.inMarginBasket[spotMarketIndex] = true;
     console.log(new Date().toISOString(), 
       spotMarketIndex,
-      mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
+      entropyAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
     );
 
@@ -1692,11 +1692,11 @@ export class MangoClient {
   }
 
   /**
-   * Make sure mangoAccount has recent and valid inMarginBasket and spotOpenOrders
+   * Make sure entropyAccount has recent and valid inMarginBasket and spotOpenOrders
    */
   async placeSpotOrder2(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     spotMarket: Market,
     owner: Account | WalletAdapter,
 
@@ -1711,7 +1711,7 @@ export class MangoClient {
     const maxBaseQuantity = spotMarket.baseSizeNumberToLots(size);
 
     // TODO implement srm vault fee discount
-    // const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
+    // const feeTier = getFeeTier(0, nativeToUi(entropyGroup.nativeSrm || 0, SRM_DECIMALS));
     const feeTier = getFeeTier(0, nativeToUi(0, 0));
     const rates = getFeeRates(feeTier);
     const maxQuoteQuantity = new BN(
@@ -1730,29 +1730,29 @@ export class MangoClient {
     }
     const selfTradeBehavior = 'decrementTake';
 
-    const spotMarketIndex = mangoGroup.getSpotMarketIndex(spotMarket.publicKey);
+    const spotMarketIndex = entropyGroup.getSpotMarketIndex(spotMarket.publicKey);
 
-    if (!mangoGroup.rootBankAccounts.filter((a) => !!a).length) {
-      await mangoGroup.loadRootBanks(this.connection);
+    if (!entropyGroup.rootBankAccounts.filter((a) => !!a).length) {
+      await entropyGroup.loadRootBanks(this.connection);
     }
     let feeVault: PublicKey = zeroKey;
     if (useMsrmVault) {
-      feeVault = mangoGroup.msrmVault;
+      feeVault = entropyGroup.msrmVault;
     } else if (useMsrmVault === false) {
-      feeVault = mangoGroup.srmVault;
+      feeVault = entropyGroup.srmVault;
     } else {
       const totalMsrm = await this.connection.getTokenAccountBalance(
-        mangoGroup.msrmVault,
+        entropyGroup.msrmVault,
       );
       feeVault =
         totalMsrm?.value?.uiAmount && totalMsrm.value.uiAmount > 0
-          ? mangoGroup.msrmVault
-          : mangoGroup.srmVault;
+          ? entropyGroup.msrmVault
+          : entropyGroup.srmVault;
     }
 
-    const baseRootBank = mangoGroup.rootBankAccounts[spotMarketIndex];
+    const baseRootBank = entropyGroup.rootBankAccounts[spotMarketIndex];
     const baseNodeBank = baseRootBank?.nodeBankAccounts[0];
-    const quoteRootBank = mangoGroup.rootBankAccounts[QUOTE_INDEX];
+    const quoteRootBank = entropyGroup.rootBankAccounts[QUOTE_INDEX];
     const quoteNodeBank = quoteRootBank?.nodeBankAccounts[0];
 
     if (!baseRootBank || !baseNodeBank || !quoteRootBank || !quoteNodeBank) {
@@ -1766,17 +1766,17 @@ export class MangoClient {
     // Only pass in open orders if in margin basket or current market index, and
     // the only writable account should be OpenOrders for current market index
     let marketOpenOrdersKey = zeroKey;
-    for (let i = 0; i < mangoAccount.spotOpenOrders.length; i++) {
+    for (let i = 0; i < entropyAccount.spotOpenOrders.length; i++) {
       let pubkey = zeroKey;
       let isWritable = false;
 
       if (i === spotMarketIndex) {
         isWritable = true;
 
-        if (mangoAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
+        if (entropyAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
           // open orders missing for this market; create a new one now
           const openOrdersSpace = OpenOrders.getLayout(
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
           ).span;
 
           const openOrdersLamports =
@@ -1789,19 +1789,19 @@ export class MangoClient {
             this.connection,
             owner.publicKey,
             openOrdersSpace,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
             openOrdersLamports,
           );
 
           const initOpenOrders = makeInitSpotOpenOrdersInstruction(
             this.programId,
-            mangoGroup.publicKey,
-            mangoAccount.publicKey,
+            entropyGroup.publicKey,
+            entropyAccount.publicKey,
             owner.publicKey,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
             accInstr.account.publicKey,
             spotMarket.publicKey,
-            mangoGroup.signerKey,
+            entropyGroup.signerKey,
           );
 
           const initTx = new Transaction();
@@ -1812,11 +1812,11 @@ export class MangoClient {
           await this.sendTransaction(initTx, owner, [accInstr.account]);
           pubkey = accInstr.account.publicKey;
         } else {
-          pubkey = mangoAccount.spotOpenOrders[i];
+          pubkey = entropyAccount.spotOpenOrders[i];
         }
         marketOpenOrdersKey = pubkey;
-      } else if (mangoAccount.inMarginBasket[i]) {
-        pubkey = mangoAccount.spotOpenOrders[i];
+      } else if (entropyAccount.inMarginBasket[i]) {
+        pubkey = entropyAccount.spotOpenOrders[i];
       }
 
       // new design does not require zero keys to be passed in
@@ -1835,10 +1835,10 @@ export class MangoClient {
 
     const placeOrderInstruction = makePlaceSpotOrder2Instruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.entropyCache,
       spotMarket.programId,
       spotMarket.publicKey,
       spotMarket['_decoded'].bids,
@@ -1853,7 +1853,7 @@ export class MangoClient {
       quoteRootBank.publicKey,
       quoteNodeBank.publicKey,
       quoteNodeBank.vault,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       dexSigner,
       feeVault,
       openOrdersKeys,
@@ -1873,15 +1873,15 @@ export class MangoClient {
       additionalSigners,
     );
 
-    // update MangoAccount to have new OpenOrders pubkey
+    // update EntropyAccount to have new OpenOrders pubkey
     // We know this new key is in margin basket because if it was a full taker trade
     // there is some leftover from fee rebate. If maker trade there's the order.
     // and if it failed then we already exited before this line
-    mangoAccount.spotOpenOrders[spotMarketIndex] = marketOpenOrdersKey;
-    mangoAccount.inMarginBasket[spotMarketIndex] = true;
+    entropyAccount.spotOpenOrders[spotMarketIndex] = marketOpenOrdersKey;
+    entropyAccount.inMarginBasket[spotMarketIndex] = true;
     console.log(new Date().toISOString(), 
       spotMarketIndex,
-      mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
+      entropyAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       marketOpenOrdersKey.toBase58(),
     );
 
@@ -1889,8 +1889,8 @@ export class MangoClient {
   }
 
   async cancelSpotOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     spotMarket: Market,
     order: Order,
@@ -1898,15 +1898,15 @@ export class MangoClient {
     const transaction = new Transaction();
     const instruction = makeCancelSpotOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       owner.publicKey,
-      mangoAccount.publicKey,
+      entropyAccount.publicKey,
       spotMarket.programId,
       spotMarket.publicKey,
       spotMarket['_decoded'].bids,
       spotMarket['_decoded'].asks,
       order.openOrdersAddress,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       spotMarket['_decoded'].eventQueue,
       order,
     );
@@ -1920,12 +1920,12 @@ export class MangoClient {
       spotMarket.programId,
     );
 
-    const marketIndex = mangoGroup.getSpotMarketIndex(spotMarket.publicKey);
-    if (!mangoGroup.rootBankAccounts.length) {
-      await mangoGroup.loadRootBanks(this.connection);
+    const marketIndex = entropyGroup.getSpotMarketIndex(spotMarket.publicKey);
+    if (!entropyGroup.rootBankAccounts.length) {
+      await entropyGroup.loadRootBanks(this.connection);
     }
-    const baseRootBank = mangoGroup.rootBankAccounts[marketIndex];
-    const quoteRootBank = mangoGroup.rootBankAccounts[QUOTE_INDEX];
+    const baseRootBank = entropyGroup.rootBankAccounts[marketIndex];
+    const quoteRootBank = entropyGroup.rootBankAccounts[QUOTE_INDEX];
     const baseNodeBank = baseRootBank?.nodeBankAccounts[0];
     const quoteNodeBank = quoteRootBank?.nodeBankAccounts[0];
 
@@ -1934,19 +1934,19 @@ export class MangoClient {
     }
     const settleFundsInstruction = makeSettleFundsInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       owner.publicKey,
-      mangoAccount.publicKey,
+      entropyAccount.publicKey,
       spotMarket.programId,
       spotMarket.publicKey,
-      mangoAccount.spotOpenOrders[marketIndex],
-      mangoGroup.signerKey,
+      entropyAccount.spotOpenOrders[marketIndex],
+      entropyGroup.signerKey,
       spotMarket['_decoded'].baseVault,
       spotMarket['_decoded'].quoteVault,
-      mangoGroup.tokens[marketIndex].rootBank,
+      entropyGroup.tokens[marketIndex].rootBank,
       baseNodeBank.publicKey,
-      mangoGroup.tokens[QUOTE_INDEX].rootBank,
+      entropyGroup.tokens[QUOTE_INDEX].rootBank,
       quoteNodeBank.publicKey,
       baseNodeBank.vault,
       quoteNodeBank.vault,
@@ -1960,12 +1960,12 @@ export class MangoClient {
   }
 
   async settleFunds(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     spotMarket: Market,
   ): Promise<TransactionSignature> {
-    const marketIndex = mangoGroup.getSpotMarketIndex(spotMarket.publicKey);
+    const marketIndex = entropyGroup.getSpotMarketIndex(spotMarket.publicKey);
     const dexSigner = await PublicKey.createProgramAddress(
       [
         spotMarket.publicKey.toBuffer(),
@@ -1974,11 +1974,11 @@ export class MangoClient {
       spotMarket.programId,
     );
 
-    if (!mangoGroup.rootBankAccounts.length) {
-      await mangoGroup.loadRootBanks(this.connection);
+    if (!entropyGroup.rootBankAccounts.length) {
+      await entropyGroup.loadRootBanks(this.connection);
     }
-    const baseRootBank = mangoGroup.rootBankAccounts[marketIndex];
-    const quoteRootBank = mangoGroup.rootBankAccounts[QUOTE_INDEX];
+    const baseRootBank = entropyGroup.rootBankAccounts[marketIndex];
+    const quoteRootBank = entropyGroup.rootBankAccounts[QUOTE_INDEX];
     const baseNodeBank = baseRootBank?.nodeBankAccounts[0];
     const quoteNodeBank = quoteRootBank?.nodeBankAccounts[0];
 
@@ -1988,19 +1988,19 @@ export class MangoClient {
 
     const instruction = makeSettleFundsInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       owner.publicKey,
-      mangoAccount.publicKey,
+      entropyAccount.publicKey,
       spotMarket.programId,
       spotMarket.publicKey,
-      mangoAccount.spotOpenOrders[marketIndex],
-      mangoGroup.signerKey,
+      entropyAccount.spotOpenOrders[marketIndex],
+      entropyGroup.signerKey,
       spotMarket['_decoded'].baseVault,
       spotMarket['_decoded'].quoteVault,
-      mangoGroup.tokens[marketIndex].rootBank,
+      entropyGroup.tokens[marketIndex].rootBank,
       baseNodeBank.publicKey,
-      mangoGroup.tokens[QUOTE_INDEX].rootBank,
+      entropyGroup.tokens[QUOTE_INDEX].rootBank,
       quoteNodeBank.publicKey,
       baseNodeBank.vault,
       quoteNodeBank.vault,
@@ -2015,24 +2015,24 @@ export class MangoClient {
   }
 
   /**
-   * Assumes spotMarkets contains all Markets in MangoGroup in order
+   * Assumes spotMarkets contains all Markets in EntropyGroup in order
    */
   async settleAll(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     spotMarkets: Market[],
     owner: Account | WalletAdapter,
   ): Promise<TransactionSignature[]> {
     const transactions: Transaction[] = [];
 
     let j = 0;
-    for (let i = 0; i < mangoGroup.spotMarkets.length; i++) {
-      if (mangoGroup.spotMarkets[i].isEmpty()) continue;
+    for (let i = 0; i < entropyGroup.spotMarkets.length; i++) {
+      if (entropyGroup.spotMarkets[i].isEmpty()) continue;
       const spotMarket = spotMarkets[j];
       j++;
 
       const transaction = new Transaction();
-      const openOrdersAccount = mangoAccount.spotOpenOrdersAccounts[i];
+      const openOrdersAccount = entropyAccount.spotOpenOrdersAccounts[i];
       if (openOrdersAccount === undefined) continue;
 
       if (
@@ -2052,11 +2052,11 @@ export class MangoClient {
         spotMarket.programId,
       );
 
-      if (!mangoGroup.rootBankAccounts.length) {
-        await mangoGroup.loadRootBanks(this.connection);
+      if (!entropyGroup.rootBankAccounts.length) {
+        await entropyGroup.loadRootBanks(this.connection);
       }
-      const baseRootBank = mangoGroup.rootBankAccounts[i];
-      const quoteRootBank = mangoGroup.rootBankAccounts[QUOTE_INDEX];
+      const baseRootBank = entropyGroup.rootBankAccounts[i];
+      const quoteRootBank = entropyGroup.rootBankAccounts[QUOTE_INDEX];
       const baseNodeBank = baseRootBank?.nodeBankAccounts[0];
       const quoteNodeBank = quoteRootBank?.nodeBankAccounts[0];
 
@@ -2066,19 +2066,19 @@ export class MangoClient {
 
       const instruction = makeSettleFundsInstruction(
         this.programId,
-        mangoGroup.publicKey,
-        mangoGroup.mangoCache,
+        entropyGroup.publicKey,
+        entropyGroup.entropyCache,
         owner.publicKey,
-        mangoAccount.publicKey,
+        entropyAccount.publicKey,
         spotMarket.programId,
         spotMarket.publicKey,
-        mangoAccount.spotOpenOrders[i],
-        mangoGroup.signerKey,
+        entropyAccount.spotOpenOrders[i],
+        entropyGroup.signerKey,
         spotMarket['_decoded'].baseVault,
         spotMarket['_decoded'].quoteVault,
-        mangoGroup.tokens[i].rootBank,
+        entropyGroup.tokens[i].rootBank,
         baseNodeBank.publicKey,
-        mangoGroup.tokens[QUOTE_INDEX].rootBank,
+        entropyGroup.tokens[QUOTE_INDEX].rootBank,
         quoteNodeBank.publicKey,
         baseNodeBank.vault,
         quoteNodeBank.vault,
@@ -2120,25 +2120,25 @@ export class MangoClient {
   }
 
   /**
-   * Automatically fetch MangoAccounts for this PerpMarket
-   * Pick enough MangoAccounts that have opposite sign and send them in to get settled
+   * Automatically fetch EntropyAccounts for this PerpMarket
+   * Pick enough EntropyAccounts that have opposite sign and send them in to get settled
    */
   async settlePnl(
-    mangoGroup: MangoGroup,
-    mangoCache: MangoCache,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyCache: EntropyCache,
+    entropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     quoteRootBank: RootBank,
-    price: I80F48, // should be the MangoCache price
+    price: I80F48, // should be the EntropyCache price
     owner: Account | WalletAdapter,
-    mangoAccounts?: MangoAccount[],
+    entropyAccounts?: EntropyAccount[],
   ): Promise<TransactionSignature | null> {
-    // fetch all MangoAccounts filtered for having this perp market in basket
-    const marketIndex = mangoGroup.getPerpMarketIndex(perpMarket.publicKey);
-    const perpMarketInfo = mangoGroup.perpMarkets[marketIndex];
-    let pnl = mangoAccount.perpAccounts[marketIndex].getPnl(
+    // fetch all EntropyAccounts filtered for having this perp market in basket
+    const marketIndex = entropyGroup.getPerpMarketIndex(perpMarket.publicKey);
+    const perpMarketInfo = entropyGroup.perpMarkets[marketIndex];
+    let pnl = entropyAccount.perpAccounts[marketIndex].getPnl(
       perpMarketInfo,
-      mangoCache.perpMarketCache[marketIndex],
+      entropyCache.perpMarketCache[marketIndex],
       price,
     );
     const transaction = new Transaction();
@@ -2159,15 +2159,15 @@ export class MangoClient {
       }
       const settleFeesInstr = makeSettleFeesInstruction(
         this.programId,
-        mangoGroup.publicKey,
-        mangoCache.publicKey,
+        entropyGroup.publicKey,
+        entropyCache.publicKey,
         perpMarket.publicKey,
-        mangoAccount.publicKey,
+        entropyAccount.publicKey,
         quoteRootBank.publicKey,
         quoteRootBank.nodeBanks[0],
         quoteRootBank.nodeBankAccounts[0].vault,
-        mangoGroup.feesVault,
-        mangoGroup.signerKey,
+        entropyGroup.feesVault,
+        entropyGroup.signerKey,
       );
       transaction.add(settleFeesInstr);
       pnl = pnl.add(perpMarket.feesAccrued).min(I80F48.fromString('-0.000001'));
@@ -2182,16 +2182,16 @@ export class MangoClient {
       }
     }
 
-    if (mangoAccounts === undefined) {
-      mangoAccounts = await this.getAllMangoAccounts(mangoGroup, [], false);
+    if (entropyAccounts === undefined) {
+      entropyAccounts = await this.getAllEntropyAccounts(entropyGroup, [], false);
     }
 
-    const accountsWithPnl = mangoAccounts
+    const accountsWithPnl = entropyAccounts
       .map((m) => ({
         account: m,
         pnl: m.perpAccounts[marketIndex].getPnl(
           perpMarketInfo,
-          mangoCache.perpMarketCache[marketIndex],
+          entropyCache.perpMarketCache[marketIndex],
           price,
         ),
       }))
@@ -2199,7 +2199,7 @@ export class MangoClient {
 
     for (const account of accountsWithPnl) {
       // ignore own account explicitly
-      if (account.account.publicKey.equals(mangoAccount.publicKey)) {
+      if (account.account.publicKey.equals(entropyAccount.publicKey)) {
         continue;
       }
       if (
@@ -2210,10 +2210,10 @@ export class MangoClient {
         // Account pnl must have opposite signs
         const instr = makeSettlePnlInstruction(
           this.programId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           account.account.publicKey,
-          mangoGroup.mangoCache,
+          entropyGroup.entropyCache,
           quoteRootBank.publicKey,
           quoteRootBank.nodeBanks[0],
           new BN(marketIndex),
@@ -2237,37 +2237,37 @@ export class MangoClient {
     // Calculate the profit or loss per market
   }
 
-  getMangoAccountsForOwner(
-    mangoGroup: MangoGroup,
+  getEntropyAccountsForOwner(
+    entropyGroup: EntropyGroup,
     owner: PublicKey,
     includeOpenOrders = false,
-  ): Promise<MangoAccount[]> {
+  ): Promise<EntropyAccount[]> {
     const filters = [
       {
         memcmp: {
-          offset: MangoAccountLayout.offsetOf('owner'),
+          offset: EntropyAccountLayout.offsetOf('owner'),
           bytes: owner.toBase58(),
         },
       },
     ];
 
-    return this.getAllMangoAccounts(mangoGroup, filters, includeOpenOrders);
+    return this.getAllEntropyAccounts(entropyGroup, filters, includeOpenOrders);
   }
 
-  async getAllMangoAccounts(
-    mangoGroup: MangoGroup,
+  async getAllEntropyAccounts(
+    entropyGroup: EntropyGroup,
     filters?: any[],
     includeOpenOrders = true,
-  ): Promise<MangoAccount[]> {
+  ): Promise<EntropyAccount[]> {
     const accountFilters = [
       {
         memcmp: {
-          offset: MangoAccountLayout.offsetOf('mangoGroup'),
-          bytes: mangoGroup.publicKey.toBase58(),
+          offset: EntropyAccountLayout.offsetOf('entropyGroup'),
+          bytes: entropyGroup.publicKey.toBase58(),
         },
       },
       {
-        dataSize: MangoAccountLayout.span,
+        dataSize: EntropyAccountLayout.span,
       },
     ];
 
@@ -2275,15 +2275,15 @@ export class MangoClient {
       accountFilters.push(...filters);
     }
 
-    const mangoAccounts = await getFilteredProgramAccounts(
+    const entropyAccounts = await getFilteredProgramAccounts(
       this.connection,
       this.programId,
       accountFilters,
     ).then((accounts) =>
       accounts.map(({ publicKey, accountInfo }) => {
-        return new MangoAccount(
+        return new EntropyAccount(
           publicKey,
-          MangoAccountLayout.decode(
+          EntropyAccountLayout.decode(
             accountInfo == null ? undefined : accountInfo.data,
           ),
         );
@@ -2291,7 +2291,7 @@ export class MangoClient {
     );
 
     if (includeOpenOrders) {
-      const openOrderPks = mangoAccounts
+      const openOrderPks = entropyAccounts
         .map((ma) => ma.spotOpenOrders.filter((pk) => !pk.equals(zeroKey)))
         .flat();
 
@@ -2305,7 +2305,7 @@ export class MangoClient {
           OpenOrders.fromAccountInfo(
             publicKey,
             accountInfo,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
           ),
       );
 
@@ -2315,7 +2315,7 @@ export class MangoClient {
           openOrdersAccount;
       });
 
-      for (const ma of mangoAccounts) {
+      for (const ma of entropyAccounts) {
         for (let i = 0; i < ma.spotOpenOrders.length; i++) {
           if (ma.spotOpenOrders[i].toBase58() in pkToOpenOrdersAccount) {
             ma.spotOpenOrdersAccounts[i] =
@@ -2325,10 +2325,10 @@ export class MangoClient {
       }
     }
 
-    return mangoAccounts;
+    return entropyAccounts;
   }
 
-  async addStubOracle(mangoGroupPk: PublicKey, admin: Account) {
+  async addStubOracle(entropyGroupPk: PublicKey, admin: Account) {
     const createOracleAccountInstruction = await createAccountInstruction(
       this.connection,
       admin.publicKey,
@@ -2338,7 +2338,7 @@ export class MangoClient {
 
     const instruction = makeAddOracleInstruction(
       this.programId,
-      mangoGroupPk,
+      entropyGroupPk,
       createOracleAccountInstruction.account.publicKey,
       admin.publicKey,
     );
@@ -2352,14 +2352,14 @@ export class MangoClient {
   }
 
   async setStubOracle(
-    mangoGroupPk: PublicKey,
+    entropyGroupPk: PublicKey,
     oraclePk: PublicKey,
     admin: Account,
     price: number,
   ) {
     const instruction = makeSetOracleInstruction(
       this.programId,
-      mangoGroupPk,
+      entropyGroupPk,
       oraclePk,
       admin.publicKey,
       I80F48.fromNumber(price),
@@ -2373,7 +2373,7 @@ export class MangoClient {
   }
 
   async addPerpMarket(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     oraclePk: PublicKey,
     mngoMintPk: PublicKey,
     admin: Account,
@@ -2425,12 +2425,12 @@ export class MangoClient {
       admin.publicKey,
       mngoVaultAccount.publicKey,
       mngoMintPk,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
     );
 
     const instruction = await makeAddPerpMarketInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       oraclePk,
       makePerpMarketAccountInstruction.account.publicKey,
       makeEventQueueAccountInstruction.account.publicKey,
@@ -2476,7 +2476,7 @@ export class MangoClient {
   }
 
   async createPerpMarket(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     oraclePk: PublicKey,
     mngoMintPk: PublicKey,
     admin: Account | Keypair,
@@ -2499,7 +2499,7 @@ export class MangoClient {
   ) {
     const [perpMarketPk] = await PublicKey.findProgramAddress(
       [
-        mangoGroup.publicKey.toBytes(),
+        entropyGroup.publicKey.toBytes(),
         new Buffer('PerpMarket', 'utf-8'),
         oraclePk.toBytes(),
       ],
@@ -2536,7 +2536,7 @@ export class MangoClient {
     );
     const instruction = await makeCreatePerpMarketInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       oraclePk,
       perpMarketPk,
       makeEventQueueAccountInstruction.account.publicKey,
@@ -2545,7 +2545,7 @@ export class MangoClient {
       mngoMintPk,
       mngoVaultPk,
       admin.publicKey,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       I80F48.fromNumber(maintLeverage),
       I80F48.fromNumber(initLeverage),
       I80F48.fromNumber(liquidationFee),
@@ -2580,8 +2580,8 @@ export class MangoClient {
 
   // Liquidator Functions
   async forceCancelSpotOrders(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
     spotMarket: Market,
     baseRootBank: RootBank,
     quoteRootBank: RootBank,
@@ -2592,21 +2592,21 @@ export class MangoClient {
     const quoteNodeBanks = await quoteRootBank.loadNodeBanks(this.connection);
 
     const openOrdersKeys: { pubkey: PublicKey; isWritable: boolean }[] = [];
-    const spotMarketIndex = mangoGroup.getSpotMarketIndex(spotMarket.publicKey);
+    const spotMarketIndex = entropyGroup.getSpotMarketIndex(spotMarket.publicKey);
     // Only pass in open orders if in margin basket or current market index, and
     // the only writable account should be OpenOrders for current market index
-    for (let i = 0; i < liqeeMangoAccount.spotOpenOrders.length; i++) {
+    for (let i = 0; i < liqeeEntropyAccount.spotOpenOrders.length; i++) {
       let pubkey = zeroKey;
       let isWritable = false;
 
       if (i === spotMarketIndex) {
         isWritable = true;
 
-        if (liqeeMangoAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
+        if (liqeeEntropyAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
           console.log('missing oo for ', spotMarketIndex);
           // open orders missing for this market; create a new one now
           // const openOrdersSpace = OpenOrders.getLayout(
-          //   mangoGroup.dexProgramId,
+          //   entropyGroup.dexProgramId,
           // ).span;
           // const openOrdersLamports =
           //   await this.connection.getMinimumBalanceForRentExemption(
@@ -2617,7 +2617,7 @@ export class MangoClient {
           //   this.connection,
           //   owner.publicKey,
           //   openOrdersSpace,
-          //   mangoGroup.dexProgramId,
+          //   entropyGroup.dexProgramId,
           //   openOrdersLamports,
           // );
 
@@ -2625,10 +2625,10 @@ export class MangoClient {
           // additionalSigners.push(accInstr.account);
           // pubkey = accInstr.account.publicKey;
         } else {
-          pubkey = liqeeMangoAccount.spotOpenOrders[i];
+          pubkey = liqeeEntropyAccount.spotOpenOrders[i];
         }
-      } else if (liqeeMangoAccount.inMarginBasket[i]) {
-        pubkey = liqeeMangoAccount.spotOpenOrders[i];
+      } else if (liqeeEntropyAccount.inMarginBasket[i]) {
+        pubkey = liqeeEntropyAccount.spotOpenOrders[i];
       }
 
       openOrdersKeys.push({ pubkey, isWritable });
@@ -2644,9 +2644,9 @@ export class MangoClient {
 
     const instruction = makeForceCancelSpotOrdersInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
-      liqeeMangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
+      liqeeEntropyAccount.publicKey,
       baseRootBank.publicKey,
       baseNodeBanks[0].publicKey,
       baseNodeBanks[0].vault,
@@ -2656,12 +2656,12 @@ export class MangoClient {
       spotMarket.publicKey,
       spotMarket.bidsAddress,
       spotMarket.asksAddress,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       spotMarket['_decoded'].eventQueue,
       spotMarket['_decoded'].baseVault,
       spotMarket['_decoded'].quoteVault,
       dexSigner,
-      mangoGroup.dexProgramId,
+      entropyGroup.dexProgramId,
       openOrdersKeys,
       limit,
     );
@@ -2676,18 +2676,18 @@ export class MangoClient {
    * Send multiple instructions to cancel all perp orders in this market
    */
   async forceCancelAllPerpOrdersInMarket(
-    mangoGroup: MangoGroup,
-    liqee: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqee: EntropyAccount,
     perpMarket: PerpMarket,
     payer: Account | WalletAdapter,
     limitPerInstruction: number,
   ): Promise<TransactionSignature> {
     const transaction = new Transaction();
-    const marketIndex = mangoGroup.getPerpMarketIndex(perpMarket.publicKey);
+    const marketIndex = entropyGroup.getPerpMarketIndex(perpMarket.publicKey);
     const instruction = makeForceCancelPerpOrdersInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       perpMarket.publicKey,
       perpMarket.bids,
       perpMarket.asks,
@@ -2707,8 +2707,8 @@ export class MangoClient {
         orderCount = 0;
         const instruction = makeForceCancelPerpOrdersInstruction(
           this.programId,
-          mangoGroup.publicKey,
-          mangoGroup.mangoCache,
+          entropyGroup.publicKey,
+          entropyGroup.entropyCache,
           perpMarket.publicKey,
           perpMarket.bids,
           perpMarket.asks,
@@ -2730,21 +2730,21 @@ export class MangoClient {
   }
 
   async forceCancelPerpOrders(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     payer: Account,
     limit: BN,
   ) {
     const instruction = makeForceCancelPerpOrdersInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       perpMarket.publicKey,
       perpMarket.bids,
       perpMarket.asks,
-      liqeeMangoAccount.publicKey,
-      liqeeMangoAccount.spotOpenOrders,
+      liqeeEntropyAccount.publicKey,
+      liqeeEntropyAccount.spotOpenOrders,
       limit,
     );
 
@@ -2755,9 +2755,9 @@ export class MangoClient {
   }
 
   async liquidateTokenAndToken(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
-    liqorMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
+    liqorEntropyAccount: EntropyAccount,
     assetRootBank: RootBank,
     liabRootBank: RootBank,
     payer: Account,
@@ -2765,17 +2765,17 @@ export class MangoClient {
   ) {
     const instruction = makeLiquidateTokenAndTokenInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
-      liqeeMangoAccount.publicKey,
-      liqorMangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
+      liqeeEntropyAccount.publicKey,
+      liqorEntropyAccount.publicKey,
       payer.publicKey,
       assetRootBank.publicKey,
       assetRootBank.nodeBanks[0],
       liabRootBank.publicKey,
       liabRootBank.nodeBanks[0],
-      liqeeMangoAccount.spotOpenOrders,
-      liqorMangoAccount.spotOpenOrders,
+      liqeeEntropyAccount.spotOpenOrders,
+      liqorEntropyAccount.spotOpenOrders,
       maxLiabTransfer,
     );
 
@@ -2786,9 +2786,9 @@ export class MangoClient {
   }
 
   async liquidateTokenAndPerp(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
-    liqorMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
+    liqorEntropyAccount: EntropyAccount,
     rootBank: RootBank,
     payer: Account,
     assetType: AssetType,
@@ -2799,15 +2799,15 @@ export class MangoClient {
   ) {
     const instruction = makeLiquidateTokenAndPerpInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
-      liqeeMangoAccount.publicKey,
-      liqorMangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
+      liqeeEntropyAccount.publicKey,
+      liqorEntropyAccount.publicKey,
       payer.publicKey,
       rootBank.publicKey,
       rootBank.nodeBanks[0],
-      liqeeMangoAccount.spotOpenOrders,
-      liqorMangoAccount.spotOpenOrders,
+      liqeeEntropyAccount.spotOpenOrders,
+      liqorEntropyAccount.spotOpenOrders,
       assetType,
       new BN(assetIndex),
       liabType,
@@ -2822,24 +2822,24 @@ export class MangoClient {
   }
 
   async liquidatePerpMarket(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
-    liqorMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
+    liqorEntropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     payer: Account,
     baseTransferRequest: BN,
   ) {
     const instruction = makeLiquidatePerpMarketInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       perpMarket.publicKey,
       perpMarket.eventQueue,
-      liqeeMangoAccount.publicKey,
-      liqorMangoAccount.publicKey,
+      liqeeEntropyAccount.publicKey,
+      liqorEntropyAccount.publicKey,
       payer.publicKey,
-      liqeeMangoAccount.spotOpenOrders,
-      liqorMangoAccount.spotOpenOrders,
+      liqeeEntropyAccount.spotOpenOrders,
+      liqorEntropyAccount.spotOpenOrders,
       baseTransferRequest,
     );
 
@@ -2850,8 +2850,8 @@ export class MangoClient {
   }
 
   async settleFees(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     rootBank: RootBank,
     payer: Account,
@@ -2860,15 +2860,15 @@ export class MangoClient {
 
     const instruction = makeSettleFeesInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       perpMarket.publicKey,
-      mangoAccount.publicKey,
+      entropyAccount.publicKey,
       rootBank.publicKey,
       nodeBanks[0].publicKey,
       nodeBanks[0].vault,
-      mangoGroup.feesVault,
-      mangoGroup.signerKey,
+      entropyGroup.feesVault,
+      entropyGroup.signerKey,
     );
 
     const transaction = new Transaction();
@@ -2878,9 +2878,9 @@ export class MangoClient {
   }
 
   async resolvePerpBankruptcy(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
-    liqorMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
+    liqorEntropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     rootBank: RootBank,
     payer: Account,
@@ -2890,18 +2890,18 @@ export class MangoClient {
     const nodeBanks = await rootBank.loadNodeBanks(this.connection);
     const instruction = makeResolvePerpBankruptcyInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
-      liqeeMangoAccount.publicKey,
-      liqorMangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
+      liqeeEntropyAccount.publicKey,
+      liqorEntropyAccount.publicKey,
       payer.publicKey,
       rootBank.publicKey,
       nodeBanks[0].publicKey,
       nodeBanks[0].vault,
-      mangoGroup.insuranceVault,
-      mangoGroup.signerKey,
+      entropyGroup.insuranceVault,
+      entropyGroup.signerKey,
       perpMarket.publicKey,
-      liqorMangoAccount.spotOpenOrders,
+      liqorEntropyAccount.spotOpenOrders,
       new BN(liabIndex),
       maxLiabTransfer,
     );
@@ -2913,9 +2913,9 @@ export class MangoClient {
   }
 
   async resolveTokenBankruptcy(
-    mangoGroup: MangoGroup,
-    liqeeMangoAccount: MangoAccount,
-    liqorMangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    liqeeEntropyAccount: EntropyAccount,
+    liqorEntropyAccount: EntropyAccount,
     quoteRootBank: RootBank,
     liabRootBank: RootBank,
     payer: Account,
@@ -2924,19 +2924,19 @@ export class MangoClient {
     const quoteNodeBanks = await quoteRootBank.loadNodeBanks(this.connection);
     const instruction = makeResolveTokenBankruptcyInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
-      liqeeMangoAccount.publicKey,
-      liqorMangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
+      liqeeEntropyAccount.publicKey,
+      liqorEntropyAccount.publicKey,
       payer.publicKey,
       quoteRootBank.publicKey,
       quoteRootBank.nodeBanks[0],
       quoteNodeBanks[0].vault,
-      mangoGroup.insuranceVault,
-      mangoGroup.signerKey,
+      entropyGroup.insuranceVault,
+      entropyGroup.signerKey,
       liabRootBank.publicKey,
       liabRootBank.nodeBanks[0],
-      liqorMangoAccount.spotOpenOrders,
+      liqorEntropyAccount.spotOpenOrders,
       liabRootBank.nodeBanks,
       maxLiabTransfer,
     );
@@ -2948,8 +2948,8 @@ export class MangoClient {
   }
 
   async redeemMngo(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     payer: Account | WalletAdapter,
     mngoRootBank: PublicKey,
@@ -2958,16 +2958,16 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const instruction = makeRedeemMngoInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
+      entropyAccount.publicKey,
       payer.publicKey,
       perpMarket.publicKey,
       perpMarket.mngoVault,
       mngoRootBank,
       mngoNodeBank,
       mngoVault,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
     );
     const transaction = new Transaction();
     transaction.add(instruction);
@@ -2976,8 +2976,8 @@ export class MangoClient {
   }
 
   async redeemAllMngo(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     payer: Account | WalletAdapter,
     mngoRootBank: PublicKey,
     mngoNodeBank: PublicKey,
@@ -2987,35 +2987,35 @@ export class MangoClient {
     let transaction = new Transaction();
 
     const perpMarkets = await Promise.all(
-      mangoAccount.perpAccounts.map((perpAccount, i) => {
+      entropyAccount.perpAccounts.map((perpAccount, i) => {
         if (perpAccount.mngoAccrued.eq(ZERO_BN)) {
           return promiseUndef();
         } else {
           return this.getPerpMarket(
-            mangoGroup.perpMarkets[i].perpMarket,
-            mangoGroup.tokens[i].decimals,
-            mangoGroup.tokens[QUOTE_INDEX].decimals,
+            entropyGroup.perpMarkets[i].perpMarket,
+            entropyGroup.tokens[i].decimals,
+            entropyGroup.tokens[QUOTE_INDEX].decimals,
           );
         }
       }),
     );
 
-    for (let i = 0; i < mangoAccount.perpAccounts.length; i++) {
+    for (let i = 0; i < entropyAccount.perpAccounts.length; i++) {
       const perpMarket = perpMarkets[i];
       if (perpMarket === undefined) continue;
 
       const instruction = makeRedeemMngoInstruction(
         this.programId,
-        mangoGroup.publicKey,
-        mangoGroup.mangoCache,
-        mangoAccount.publicKey,
+        entropyGroup.publicKey,
+        entropyGroup.entropyCache,
+        entropyAccount.publicKey,
         payer.publicKey,
         perpMarket.publicKey,
         perpMarket.mngoVault,
         mngoRootBank,
         mngoNodeBank,
         mngoVault,
-        mangoGroup.signerKey,
+        entropyGroup.signerKey,
       );
       transaction.add(instruction);
       if (transaction.instructions.length === 9) {
@@ -3056,16 +3056,16 @@ export class MangoClient {
     }
   }
 
-  async addMangoAccountInfo(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+  async addEntropyAccountInfo(
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     info: string,
   ): Promise<TransactionSignature> {
-    const instruction = makeAddMangoAccountInfoInstruction(
+    const instruction = makeAddEntropyAccountInfoInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
       info,
     );
@@ -3077,19 +3077,19 @@ export class MangoClient {
   }
 
   async depositMsrm(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     msrmAccount: PublicKey,
     quantity: number,
   ): Promise<TransactionSignature> {
     const instruction = makeDepositMsrmInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
       msrmAccount,
-      mangoGroup.msrmVault,
+      entropyGroup.msrmVault,
       new BN(Math.floor(quantity)),
     );
     const transaction = new Transaction();
@@ -3099,20 +3099,20 @@ export class MangoClient {
     return await this.sendTransaction(transaction, owner, additionalSigners);
   }
   async withdrawMsrm(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     msrmAccount: PublicKey,
     quantity: number,
   ): Promise<TransactionSignature> {
     const instruction = makeWithdrawMsrmInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
       msrmAccount,
-      mangoGroup.msrmVault,
-      mangoGroup.signerKey,
+      entropyGroup.msrmVault,
+      entropyGroup.signerKey,
       new BN(Math.floor(quantity)),
     );
     const transaction = new Transaction();
@@ -3123,7 +3123,7 @@ export class MangoClient {
   }
 
   async changePerpMarketParams(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     perpMarket: PerpMarket,
     admin: Account | WalletAdapter,
 
@@ -3140,7 +3140,7 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const instruction = makeChangePerpMarketParamsInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       perpMarket.publicKey,
       admin.publicKey,
       I80F48.fromNumberOrUndef(maintLeverage),
@@ -3163,7 +3163,7 @@ export class MangoClient {
   }
 
   async changePerpMarketParams2(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     perpMarket: PerpMarket,
     admin: Account | WalletAdapter,
 
@@ -3182,7 +3182,7 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
     const instruction = makeChangePerpMarketParams2Instruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       perpMarket.publicKey,
       admin.publicKey,
       I80F48.fromNumberOrUndef(maintLeverage),
@@ -3207,13 +3207,13 @@ export class MangoClient {
   }
 
   async setGroupAdmin(
-    mangoGroup: MangoGroup,
+    entropyGroup: EntropyGroup,
     newAdmin: PublicKey,
     admin: Account | WalletAdapter,
   ): Promise<TransactionSignature> {
     const instruction = makeSetGroupAdminInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       newAdmin,
       admin.publicKey,
     );
@@ -3227,9 +3227,9 @@ export class MangoClient {
    * Add allowance for orders to be cancelled and replaced in a single transaction
    */
   async modifySpotOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
-    mangoCache: PublicKey,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
+    entropyCache: PublicKey,
     spotMarket: Market,
     owner: Account | WalletAdapter,
     order: Order,
@@ -3243,15 +3243,15 @@ export class MangoClient {
 
     const instruction = makeCancelSpotOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
+      entropyGroup.publicKey,
       owner.publicKey,
-      mangoAccount.publicKey,
+      entropyAccount.publicKey,
       spotMarket.programId,
       spotMarket.publicKey,
       spotMarket['_decoded'].bids,
       spotMarket['_decoded'].asks,
       order.openOrdersAddress,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       spotMarket['_decoded'].eventQueue,
       order,
     );
@@ -3265,13 +3265,13 @@ export class MangoClient {
       spotMarket.programId,
     );
 
-    const spotMarketIndex = mangoGroup.getSpotMarketIndex(spotMarket.publicKey);
-    if (!mangoGroup.rootBankAccounts.length) {
-      await mangoGroup.loadRootBanks(this.connection);
+    const spotMarketIndex = entropyGroup.getSpotMarketIndex(spotMarket.publicKey);
+    if (!entropyGroup.rootBankAccounts.length) {
+      await entropyGroup.loadRootBanks(this.connection);
     }
-    const baseRootBank = mangoGroup.rootBankAccounts[spotMarketIndex];
+    const baseRootBank = entropyGroup.rootBankAccounts[spotMarketIndex];
     const baseNodeBank = baseRootBank?.nodeBankAccounts[0];
-    const quoteRootBank = mangoGroup.rootBankAccounts[QUOTE_INDEX];
+    const quoteRootBank = entropyGroup.rootBankAccounts[QUOTE_INDEX];
     const quoteNodeBank = quoteRootBank?.nodeBankAccounts[0];
 
     if (!baseNodeBank || !quoteNodeBank) {
@@ -3279,19 +3279,19 @@ export class MangoClient {
     }
     const settleFundsInstruction = makeSettleFundsInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoGroup.mangoCache,
+      entropyGroup.publicKey,
+      entropyGroup.entropyCache,
       owner.publicKey,
-      mangoAccount.publicKey,
+      entropyAccount.publicKey,
       spotMarket.programId,
       spotMarket.publicKey,
-      mangoAccount.spotOpenOrders[spotMarketIndex],
-      mangoGroup.signerKey,
+      entropyAccount.spotOpenOrders[spotMarketIndex],
+      entropyGroup.signerKey,
       spotMarket['_decoded'].baseVault,
       spotMarket['_decoded'].quoteVault,
-      mangoGroup.tokens[spotMarketIndex].rootBank,
+      entropyGroup.tokens[spotMarketIndex].rootBank,
       baseNodeBank.publicKey,
-      mangoGroup.tokens[QUOTE_INDEX].rootBank,
+      entropyGroup.tokens[QUOTE_INDEX].rootBank,
       quoteNodeBank.publicKey,
       baseNodeBank.vault,
       quoteNodeBank.vault,
@@ -3305,7 +3305,7 @@ export class MangoClient {
     const maxBaseQuantity = spotMarket.baseSizeNumberToLots(size);
 
     // TODO implement srm vault fee discount
-    // const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
+    // const feeTier = getFeeTier(0, nativeToUi(entropyGroup.nativeSrm || 0, SRM_DECIMALS));
     const feeTier = getFeeTier(0, nativeToUi(0, 0));
     const rates = getFeeRates(feeTier);
     const maxQuoteQuantity = new BN(
@@ -3333,17 +3333,17 @@ export class MangoClient {
 
     // Only pass in open orders if in margin basket or current market index, and
     // the only writable account should be OpenOrders for current market index
-    for (let i = 0; i < mangoAccount.spotOpenOrders.length; i++) {
+    for (let i = 0; i < entropyAccount.spotOpenOrders.length; i++) {
       let pubkey = zeroKey;
       let isWritable = false;
 
       if (i === spotMarketIndex) {
         isWritable = true;
 
-        if (mangoAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
+        if (entropyAccount.spotOpenOrders[spotMarketIndex].equals(zeroKey)) {
           // open orders missing for this market; create a new one now
           const openOrdersSpace = OpenOrders.getLayout(
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
           ).span;
 
           const openOrdersLamports =
@@ -3356,19 +3356,19 @@ export class MangoClient {
             this.connection,
             owner.publicKey,
             openOrdersSpace,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
             openOrdersLamports,
           );
 
           const initOpenOrders = makeInitSpotOpenOrdersInstruction(
             this.programId,
-            mangoGroup.publicKey,
-            mangoAccount.publicKey,
+            entropyGroup.publicKey,
+            entropyAccount.publicKey,
             owner.publicKey,
-            mangoGroup.dexProgramId,
+            entropyGroup.dexProgramId,
             accInstr.account.publicKey,
             spotMarket.publicKey,
-            mangoGroup.signerKey,
+            entropyGroup.signerKey,
           );
 
           const initTx = new Transaction();
@@ -3380,10 +3380,10 @@ export class MangoClient {
 
           pubkey = accInstr.account.publicKey;
         } else {
-          pubkey = mangoAccount.spotOpenOrders[i];
+          pubkey = entropyAccount.spotOpenOrders[i];
         }
-      } else if (mangoAccount.inMarginBasket[i]) {
-        pubkey = mangoAccount.spotOpenOrders[i];
+      } else if (entropyAccount.inMarginBasket[i]) {
+        pubkey = entropyAccount.spotOpenOrders[i];
       }
 
       openOrdersKeys.push({ pubkey, isWritable });
@@ -3391,10 +3391,10 @@ export class MangoClient {
 
     const placeOrderInstruction = makePlaceSpotOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoCache,
+      entropyCache,
       spotMarket.programId,
       spotMarket.publicKey,
       spotMarket['_decoded'].bids,
@@ -3409,9 +3409,9 @@ export class MangoClient {
       quoteRootBank.publicKey,
       quoteNodeBank.publicKey,
       quoteNodeBank.vault,
-      mangoGroup.signerKey,
+      entropyGroup.signerKey,
       dexSigner,
-      mangoGroup.srmVault, // TODO: choose msrm vault if it has any deposits
+      entropyGroup.srmVault, // TODO: choose msrm vault if it has any deposits
       openOrdersKeys,
       side,
       limitPrice,
@@ -3426,7 +3426,7 @@ export class MangoClient {
     if (spotMarketIndex > 0) {
       console.log(new Date().toISOString(), 
         spotMarketIndex - 1,
-        mangoAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
+        entropyAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
       );
     }
@@ -3436,13 +3436,13 @@ export class MangoClient {
       additionalSigners,
     );
 
-    // update MangoAccount to have new OpenOrders pubkey
-    mangoAccount.spotOpenOrders[spotMarketIndex] =
+    // update EntropyAccount to have new OpenOrders pubkey
+    entropyAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
-    mangoAccount.inMarginBasket[spotMarketIndex] = true;
+    entropyAccount.inMarginBasket[spotMarketIndex] = true;
     console.log(new Date().toISOString(), 
       spotMarketIndex,
-      mangoAccount.spotOpenOrders[spotMarketIndex].toBase58(),
+      entropyAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
     );
 
@@ -3450,9 +3450,9 @@ export class MangoClient {
   }
 
   async modifyPerpOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
-    mangoCache: PublicKey,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
+    entropyCache: PublicKey,
     perpMarket: PerpMarket,
     owner: Account | WalletAdapter,
     order: PerpOrder,
@@ -3470,8 +3470,8 @@ export class MangoClient {
 
     const cancelInstruction = makeCancelPerpOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
       perpMarket.publicKey,
       perpMarket.bids,
@@ -3489,15 +3489,15 @@ export class MangoClient {
 
     const placeInstruction = makePlacePerpOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoCache,
+      entropyCache,
       perpMarket.publicKey,
       perpMarket.bids,
       perpMarket.asks,
       perpMarket.eventQueue,
-      mangoAccount.spotOpenOrders,
+      entropyAccount.spotOpenOrders,
       nativePrice,
       nativeQuantity,
       clientOrderId
@@ -3517,7 +3517,7 @@ export class MangoClient {
           )
         : [];
       const accounts: Set<string> = new Set();
-      accounts.add(mangoAccount.publicKey.toBase58());
+      accounts.add(entropyAccount.publicKey.toBase58());
 
       for (const order of bookSide) {
         accounts.add(order.owner.toBase58());
@@ -3528,8 +3528,8 @@ export class MangoClient {
 
       const consumeInstruction = makeConsumeEventsInstruction(
         this.programId,
-        mangoGroup.publicKey,
-        mangoGroup.mangoCache,
+        entropyGroup.publicKey,
+        entropyGroup.entropyCache,
         perpMarket.publicKey,
         perpMarket.eventQueue,
         Array.from(accounts)
@@ -3544,8 +3544,8 @@ export class MangoClient {
   }
 
   async addPerpTriggerOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     perpMarket: PerpMarket,
     owner: Account | WalletAdapter,
     orderType: PerpOrderType,
@@ -3560,10 +3560,10 @@ export class MangoClient {
     const transaction = new Transaction();
     const additionalSigners: Account[] = [];
 
-    let advancedOrders: PublicKey = mangoAccount.advancedOrdersKey;
-    if (mangoAccount.advancedOrdersKey.equals(zeroKey)) {
+    let advancedOrders: PublicKey = entropyAccount.advancedOrdersKey;
+    if (entropyAccount.advancedOrdersKey.equals(zeroKey)) {
       [advancedOrders] = await PublicKey.findProgramAddress(
-        [mangoAccount.publicKey.toBytes()],
+        [entropyAccount.publicKey.toBytes()],
         this.programId,
       );
 
@@ -3572,18 +3572,18 @@ export class MangoClient {
       transaction.add(
         makeInitAdvancedOrdersInstruction(
           this.programId,
-          mangoGroup.publicKey,
-          mangoAccount.publicKey,
+          entropyGroup.publicKey,
+          entropyAccount.publicKey,
           owner.publicKey,
           advancedOrders,
         ),
       );
     }
 
-    const marketIndex = mangoGroup.getPerpMarketIndex(perpMarket.publicKey);
+    const marketIndex = entropyGroup.getPerpMarketIndex(perpMarket.publicKey);
 
-    const baseTokenInfo = mangoGroup.tokens[marketIndex];
-    const quoteTokenInfo = mangoGroup.tokens[QUOTE_INDEX];
+    const baseTokenInfo = entropyGroup.tokens[marketIndex];
+    const quoteTokenInfo = entropyGroup.tokens[QUOTE_INDEX];
     const baseUnit = Math.pow(10, baseTokenInfo.decimals);
     const quoteUnit = Math.pow(10, quoteTokenInfo.decimals);
 
@@ -3598,18 +3598,18 @@ export class MangoClient {
       triggerPrice *
         Math.pow(10, perpMarket.quoteDecimals - perpMarket.baseDecimals),
     );
-    const openOrders = mangoAccount.spotOpenOrders.filter(
-      (pk, i) => mangoAccount.inMarginBasket[i],
+    const openOrders = entropyAccount.spotOpenOrders.filter(
+      (pk, i) => entropyAccount.inMarginBasket[i],
     );
 
     transaction.add(
       makeAddPerpTriggerOrderInstruction(
         this.programId,
-        mangoGroup.publicKey,
-        mangoAccount.publicKey,
+        entropyGroup.publicKey,
+        entropyAccount.publicKey,
         owner.publicKey,
         advancedOrders,
-        mangoGroup.mangoCache,
+        entropyGroup.entropyCache,
         perpMarket.publicKey,
         openOrders,
         orderType,
@@ -3627,22 +3627,22 @@ export class MangoClient {
       owner,
       additionalSigners,
     );
-    mangoAccount.advancedOrdersKey = advancedOrders;
+    entropyAccount.advancedOrdersKey = advancedOrders;
     return txid;
   }
 
   async removeAdvancedOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     owner: Account | WalletAdapter,
     orderIndex: number,
   ): Promise<TransactionSignature> {
     const instruction = makeRemoveAdvancedOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
       owner.publicKey,
-      mangoAccount.advancedOrdersKey,
+      entropyAccount.advancedOrdersKey,
       orderIndex,
     );
     const transaction = new Transaction();
@@ -3652,24 +3652,24 @@ export class MangoClient {
   }
 
   async executePerpTriggerOrder(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
-    mangoCache: MangoCache,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
+    entropyCache: EntropyCache,
     perpMarket: PerpMarket,
     payer: Account | WalletAdapter,
     orderIndex: number,
   ): Promise<TransactionSignature> {
-    const openOrders = mangoAccount.spotOpenOrders.filter(
-      (pk, i) => mangoAccount.inMarginBasket[i],
+    const openOrders = entropyAccount.spotOpenOrders.filter(
+      (pk, i) => entropyAccount.inMarginBasket[i],
     );
 
     const instruction = makeExecutePerpTriggerOrderInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
-      mangoAccount.advancedOrdersKey,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
+      entropyAccount.advancedOrdersKey,
       payer.publicKey,
-      mangoCache.publicKey,
+      entropyCache.publicKey,
       perpMarket.publicKey,
       perpMarket.bids,
       perpMarket.asks,
@@ -3684,15 +3684,15 @@ export class MangoClient {
   }
 
   async updateMarginBasket(
-    mangoGroup: MangoGroup,
-    mangoAccount: MangoAccount,
+    entropyGroup: EntropyGroup,
+    entropyAccount: EntropyAccount,
     payer: Account | WalletAdapter,
   ) {
     const instruction = makeUpdateMarginBasketInstruction(
       this.programId,
-      mangoGroup.publicKey,
-      mangoAccount.publicKey,
-      mangoAccount.spotOpenOrders,
+      entropyGroup.publicKey,
+      entropyAccount.publicKey,
+      entropyAccount.spotOpenOrders,
     );
     const transaction = new Transaction();
     transaction.add(instruction);

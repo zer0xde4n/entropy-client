@@ -11,7 +11,7 @@ export const msrmMints = {
   testnet: zeroKey,
 };
 
-export const mngoMints = {
+export const entropyMints = {
   devnet: new PublicKey('Bb9bsTQa1bGEtQ5KagGkvSHyuLqDWumFUcRqFusFNJWC'),
   mainnet: new PublicKey('MangoCzJ36AjZyKwVj3VnYU4GTonjfVEnJmvvWaxLac'),
 };
@@ -130,7 +130,7 @@ export interface GroupConfig {
   name: string;
   quoteSymbol: string;
   publicKey: PublicKey;
-  mangoProgramId: PublicKey;
+  entropyProgramId: PublicKey;
   serumProgramId: PublicKey;
   oracles: OracleConfig[];
   perpMarkets: PerpMarketConfig[];
@@ -254,7 +254,7 @@ function groupConfigFromJson(j: any) {
   return {
     ...j,
     publicKey: new PublicKey(j.publicKey),
-    mangoProgramId: new PublicKey(j.mangoProgramId),
+    entropyProgramId: new PublicKey(j.entropyProgramId),
     serumProgramId: new PublicKey(j.serumProgramId),
     oracles: j.oracles.map((o) => oracleConfigFromJson(o)),
     perpMarkets: j.perpMarkets.map((p) => perpMarketConfigFromJson(p)),
@@ -267,7 +267,7 @@ function groupConfigToJson(g: GroupConfig): any {
   return {
     ...g,
     publicKey: g.publicKey.toBase58(),
-    mangoProgramId: g.mangoProgramId.toBase58(),
+    entropyProgramId: g.entropyProgramId.toBase58(),
     serumProgramId: g.serumProgramId.toBase58(),
     oracles: g.oracles.map((o) => oracleConfigToJson(o)),
     perpMarkets: g.perpMarkets.map((p) => perpMarketConfigToJson(p)),

@@ -15,8 +15,8 @@ import {
 } from '@solana/web3.js';
 import { OpenOrders, TokenInstructions } from '@project-serum/serum';
 import { I80F48, ONE_I80F48 } from './fixednum';
-import MangoGroup from './MangoGroup';
-import { HealthType } from './MangoAccount';
+import EntropyGroup from './EntropyGroup';
+import { HealthType } from './EntropyAccount';
 
 /** @internal */
 export const ZERO_BN = new BN(0);
@@ -55,7 +55,7 @@ export class TimeoutError extends Error {
   }
 }
 
-export class MangoError extends Error {
+export class EntropyError extends Error {
   message: string;
   txid: string;
 
@@ -71,7 +71,7 @@ export class MangoError extends Error {
  * Weights are all 1 if no healthType provided
  */
 export function getWeights(
-  mangoGroup: MangoGroup,
+  entropyGroup: EntropyGroup,
   marketIndex: number,
   healthType?: HealthType,
 ): {
@@ -82,17 +82,17 @@ export function getWeights(
 } {
   if (healthType === 'Maint') {
     return {
-      spotAssetWeight: mangoGroup.spotMarkets[marketIndex].maintAssetWeight,
-      spotLiabWeight: mangoGroup.spotMarkets[marketIndex].maintLiabWeight,
-      perpAssetWeight: mangoGroup.perpMarkets[marketIndex].maintAssetWeight,
-      perpLiabWeight: mangoGroup.perpMarkets[marketIndex].maintLiabWeight,
+      spotAssetWeight: entropyGroup.spotMarkets[marketIndex].maintAssetWeight,
+      spotLiabWeight: entropyGroup.spotMarkets[marketIndex].maintLiabWeight,
+      perpAssetWeight: entropyGroup.perpMarkets[marketIndex].maintAssetWeight,
+      perpLiabWeight: entropyGroup.perpMarkets[marketIndex].maintLiabWeight,
     };
   } else if (healthType === 'Init') {
     return {
-      spotAssetWeight: mangoGroup.spotMarkets[marketIndex].initAssetWeight,
-      spotLiabWeight: mangoGroup.spotMarkets[marketIndex].initLiabWeight,
-      perpAssetWeight: mangoGroup.perpMarkets[marketIndex].initAssetWeight,
-      perpLiabWeight: mangoGroup.perpMarkets[marketIndex].initLiabWeight,
+      spotAssetWeight: entropyGroup.spotMarkets[marketIndex].initAssetWeight,
+      spotLiabWeight: entropyGroup.spotMarkets[marketIndex].initLiabWeight,
+      perpAssetWeight: entropyGroup.perpMarkets[marketIndex].initAssetWeight,
+      perpLiabWeight: entropyGroup.perpMarkets[marketIndex].initLiabWeight,
     };
   } else {
     return {

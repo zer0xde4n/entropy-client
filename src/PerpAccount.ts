@@ -2,7 +2,7 @@ import BN from 'bn.js';
 import { PerpMarketCache, PerpMarketInfo, ZERO_BN } from '.';
 import { I80F48, ZERO_I80F48 } from './fixednum';
 import PerpMarket from './PerpMarket';
-import MangoAccount from './MangoAccount';
+import EntropyAccount from './EntropyAccount';
 import Big from 'big.js';
 
 const ZERO = new Big(0);
@@ -29,7 +29,7 @@ export default class PerpAccount {
    * Events are sorted latest event first
    */
   getAverageOpenPrice(
-    mangoAccount: MangoAccount, // circular import?
+    entropyAccount: EntropyAccount, // circular import?
     perpMarket: PerpMarket,
     events: any[], // TODO - replace with actual Event types coming from DB
   ): Big {
@@ -37,7 +37,7 @@ export default class PerpAccount {
       return ZERO;
     }
     const basePos = perpMarket.baseLotsToNumber(this.basePosition);
-    const userPk = mangoAccount.publicKey.toString();
+    const userPk = entropyAccount.publicKey.toString();
 
     let currBase = new Big(basePos);
     let openingQuote = ZERO;
@@ -104,7 +104,7 @@ export default class PerpAccount {
    * Get price at which you break even. Includes fees.
    */
   getBreakEvenPrice(
-    mangoAccount: MangoAccount, // circular import?
+    entropyAccount: EntropyAccount, // circular import?
     perpMarket: PerpMarket,
     events: any[], // TODO - replace with actual Event types coming from DB
   ): Big {
@@ -112,7 +112,7 @@ export default class PerpAccount {
       return ZERO;
     }
     const basePos = perpMarket.baseLotsToNumber(this.basePosition);
-    const userPk = mangoAccount.publicKey.toString();
+    const userPk = entropyAccount.publicKey.toString();
 
     let currBase = new Big(basePos);
     let totalQuoteChange = ZERO;

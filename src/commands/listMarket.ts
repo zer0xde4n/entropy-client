@@ -11,21 +11,21 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import { GroupConfig } from '../config';
 import { ZERO_BN } from '../utils';
 
 export default async function listMarket(
   connection: Connection,
   payer: Account,
-  mangoProgramId: PublicKey,
+  entropyProgramId: PublicKey,
   baseMint: PublicKey,
   quoteMint: PublicKey,
   baseLotSize: number,
   quoteLotSize: number,
   dexProgramId: PublicKey,
 ): Promise<PublicKey> {
-  const client = new MangoClient(connection, mangoProgramId);
+  const client = new EntropyClient(connection, entropyProgramId);
 
   const market = new Account();
   const requestQueue = new Account();

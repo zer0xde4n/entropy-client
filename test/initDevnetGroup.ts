@@ -1,11 +1,11 @@
 // /**
 //  * How to use:
-//  * 1.) Update the mango group name on line 6
+//  * 1.) Update the entropy group name on line 6
 //  * 2.) Run yarn launch-group
-//  * 3.) Update the mango group name in keeper.ts crank.ts and in the UI in useMangoStore.ts
+//  * 3.) Update the entropy group name in keeper.ts crank.ts and in the UI in useEntropyStore.ts
 //  */
-// const newGroupName = 'mango_test_v4';
-// const mangoProgramId = '5fP7Z7a87ZEVsKr2tQPApdtq83GcTW4kz919R6ou5h5E';
+// const newGroupName = 'entropy_test_v4';
+// const entropyProgramId = '5fP7Z7a87ZEVsKr2tQPApdtq83GcTW4kz919R6ou5h5E';
 // const serumProgramId = 'DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY';
 
 // const FIXED_IDS = [
@@ -178,7 +178,7 @@
 //   const quoteMint = FIXED_IDS.find((id) => id.symbol === 'USDC')
 //     ?.mint as string;
 //   await execCommand(
-//     `yarn cli init-group ${newGroupName} ${mangoProgramId} ${serumProgramId} ${quoteMint}`,
+//     `yarn cli init-group ${newGroupName} ${entropyProgramId} ${serumProgramId} ${quoteMint}`,
 //   );
 //   console.log(`new group initialized`);
 
@@ -207,7 +207,7 @@
 //     );
 //     console.log('---');
 //   }
-//   console.log('Succcessfully created new mango group.');
+//   console.log('Succcessfully created new entropy group.');
 // };
 
 // function execCommand(cmd) {

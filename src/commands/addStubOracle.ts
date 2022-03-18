@@ -1,5 +1,5 @@
 import { Account, Connection } from '@solana/web3.js';
-import { MangoClient } from '../client';
+import { EntropyClient } from '../client';
 import { getOracleBySymbol, GroupConfig } from '../config';
 
 export default async function addStubOracle(
@@ -15,9 +15,9 @@ export default async function addStubOracle(
     symbol,
   });
 
-  const client = new MangoClient(connection, groupConfig.mangoProgramId);
+  const client = new EntropyClient(connection, groupConfig.entropyProgramId);
   await client.addStubOracle(groupConfig.publicKey, payer);
-  const group = await client.getMangoGroup(groupConfig.publicKey);
+  const group = await client.getEntropyGroup(groupConfig.publicKey);
 
   const oracle = {
     symbol: symbol,

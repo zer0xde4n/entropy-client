@@ -2,18 +2,18 @@
 import { Account, Connection } from '@solana/web3.js';
 import { Token } from '@solana/spl-token';
 import * as Test from './utils';
-import { MangoClient } from '../src';
+import { EntropyClient } from '../src';
 import { QUOTE_INDEX } from '../src/layout';
 
 // NOTE: Important that QUOTE_INDEX and quote_index might not be the same number so take caution there
 
 describe('MaxMarkets', async () => {
-  let client: MangoClient;
+  let client: EntropyClient;
   let payer: Account;
   const connection: Connection = Test.createDevnetConnection();
 
   before(async () => {
-    client = new MangoClient(connection, Test.MangoProgramId);
+    client = new EntropyClient(connection, Test.EntropyProgramId);
     payer = await Test.createAccount(connection, 10);
   });
 
@@ -32,8 +32,8 @@ describe('MaxMarkets', async () => {
       const quoteMint = mints[quoteIndex];
       if (!quoteMint) throw new Error('Failed creating mints');
 
-      // Create mango group
-      const mangoGroupPk = await client.initMangoGroup(
+      // Create entropy group
+      const entropyGroupPk = await client.initEntropyGroup(
         quoteMint.publicKey,
         Test.MSRMMint,
         Test.DexProgramId,
@@ -44,12 +44,12 @@ describe('MaxMarkets', async () => {
         Test.MAX_RATE,
         payer,
       );
-      let mangoGroup = await client.getMangoGroup(mangoGroupPk);
+      let entropyGroup = await client.getEntropyGroup(entropyGroupPk);
 
-      // Create mango account
-      const mangoAccountPk = await client.initMangoAccount(mangoGroup, payer);
-      let mangoAccount = await client.getMangoAccount(
-        mangoAccountPk,
+      // Create entropy account
+      const entropyAccountPk = await client.initEntropyAccount(entropyGroup, payer);
+      let entropyAccount = await client.getEntropyAccount(
+        entropyAccountPk,
         Test.DexProgramId,
       );
 
@@ -69,11 +69,11 @@ describe('MaxMarkets', async () => {
         new Array(mints.length).fill(1_000_000),
       );
 
-      // Add spotMarkets to MangoGroup
-      mangoGroup = await Test.addSpotMarketsToMangoGroup(
+      // Add spotMarkets to EntropyGroup
+      entropyGroup = await Test.addSpotMarketsToEntropyGroup(
         client,
         payer,
-        mangoGroupPk,
+        entropyGroupPk,
         mints,
         spotMarketPks,
       );
@@ -81,44 +81,44 @@ describe('MaxMarkets', async () => {
       // Get root and node banks
       const quoteNodeBank = await Test.getNodeBank(
         client,
-        mangoGroup,
+        entropyGroup,
         QUOTE_INDEX,
       );
       const baseNodeBank = await Test.getNodeBank(
         client,
-        mangoGroup,
+        entropyGroup,
         marketIndex,
       );
 
       // Airdrop into base node bank
       await Test.mintToTokenAccount(payer, mints[0], baseNodeBank.vault, 10);
 
-      // Deposit into mango account
-      await Test.cacheRootBanks(client, payer, mangoGroup, [
+      // Deposit into entropy account
+      await Test.cacheRootBanks(client, payer, entropyGroup, [
         marketIndex,
         QUOTE_INDEX,
       ]);
 
-      mangoAccount = await Test.performDeposit(
+      entropyAccount = await Test.performDeposit(
         client,
         payer,
-        mangoGroup,
-        mangoAccount,
+        entropyGroup,
+        entropyAccount,
         quoteNodeBank,
         tokenAccountPks[quoteIndex],
         QUOTE_INDEX,
         1_000_000,
       );
 
-      await Test.cachePrices(client, payer, mangoGroup, [marketIndex]);
+      await Test.cachePrices(client, payer, entropyGroup, [marketIndex]);
 
-      const market = await Test.getMarket(client, mangoGroup, 0);
+      const market = await Test.getMarket(client, entropyGroup, 0);
 
-      mangoAccount = await Test.placeSpotOrder(
+      entropyAccount = await Test.placeSpotOrder(
         client,
         payer,
-        mangoGroup,
-        mangoAccount,
+        entropyGroup,
+        entropyAccount,
         market,
       );
     });

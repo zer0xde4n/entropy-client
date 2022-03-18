@@ -1,13 +1,13 @@
 {
   "version": "0.1.0",
-  "name": "mango_logs",
+  "name": "entropy_logs",
   "instructions": [],
   "events": [
     {
       "name": "FillLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -107,12 +107,12 @@
       "name": "TokenBalanceLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -137,7 +137,7 @@
       "name": "CachePricesLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -161,7 +161,7 @@
       "name": "CacheRootBanksLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -192,7 +192,7 @@
       "name": "CachePerpMarketsLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -223,17 +223,17 @@
       "name": "SettlePnlLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccountA",
+          "name": "entropyAccountA",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccountB",
+          "name": "entropyAccountB",
           "type": "publicKey",
           "index": false
         },
@@ -253,12 +253,12 @@
       "name": "SettleFeesLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -278,7 +278,7 @@
       "name": "LiquidateTokenAndTokenLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -333,7 +333,7 @@
       "name": "LiquidateTokenAndPerpLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -398,7 +398,7 @@
       "name": "LiquidatePerpMarketLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -443,7 +443,7 @@
       "name": "PerpBankruptcyLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -488,7 +488,7 @@
       "name": "TokenBankruptcyLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -533,7 +533,7 @@
       "name": "UpdateRootBankLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -558,7 +558,7 @@
       "name": "UpdateFundingLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
@@ -583,12 +583,12 @@
       "name": "OpenOrdersBalanceLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -628,12 +628,12 @@
       "name": "MngoAccrualLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -653,12 +653,12 @@
       "name": "WithdrawLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -683,12 +683,12 @@
       "name": "DepositLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -713,12 +713,12 @@
       "name": "RedeemMngoLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },
@@ -738,12 +738,12 @@
       "name": "CancelAllPerpOrdersLog",
       "fields": [
         {
-          "name": "mangoGroup",
+          "name": "entropyGroup",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "mangoAccount",
+          "name": "entropyAccount",
           "type": "publicKey",
           "index": false
         },

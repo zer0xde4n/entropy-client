@@ -2,28 +2,28 @@
 import { Account } from '@solana/web3.js';
 import { expect } from 'chai';
 import * as Test from './utils';
-import { MangoClient } from '../src';
-import MangoGroup from '../src/MangoGroup';
+import { EntropyClient } from '../src';
+import EntropyGroup from '../src/EntropyGroup';
 import { QUOTE_INDEX } from '../src/layout';
 import { sleep, zeroKey } from '../src/utils';
-import MangoAccount from '../src/MangoAccount';
+import EntropyAccount from '../src/EntropyAccount';
 
-describe('MangoClient', async () => {
-  let client: MangoClient;
+describe('EntropyClient', async () => {
+  let client: EntropyClient;
   let payer: Account;
   const connection = Test.createDevnetConnection();
 
   before(async () => {
-    client = new MangoClient(connection, Test.MangoProgramId);
+    client = new EntropyClient(connection, Test.EntropyProgramId);
     sleep(2000); // sleeping because devnet rate limits suck
     payer = await Test.createAccount(connection);
     sleep(2000); // sleeping because devnet rate limits suck
   });
 
-  describe('initMangoGroup', async () => {
-    it('should successfully create a MangoGroup', async () => {
+  describe('initEntropyGroup', async () => {
+    it('should successfully create a EntropyGroup', async () => {
       sleep(1000); // sleeping because devnet rate limits suck
-      const groupKey = await client.initMangoGroup(
+      const groupKey = await client.initEntropyGroup(
         Test.USDCMint,
         Test.MSRMMint,
         Test.DexProgramId,
@@ -34,7 +34,7 @@ describe('MangoClient', async () => {
         1.5,
         payer,
       );
-      const group = await client.getMangoGroup(groupKey);
+      const group = await client.getEntropyGroup(groupKey);
       expect(groupKey).to.not.be.undefined;
       expect(group).to.not.be.undefined;
       expect(group.tokens[QUOTE_INDEX].mint.toBase58(), 'quoteMint').to.equal(
@@ -50,10 +50,10 @@ describe('MangoClient', async () => {
   });
 
   describe('cacheRootBanks', async () => {
-    let group: MangoGroup;
+    let group: EntropyGroup;
 
     before(async () => {
-      const groupKey = await client.initMangoGroup(
+      const groupKey = await client.initEntropyGroup(
         Test.USDCMint,
         Test.MSRMMint,
         Test.DexProgramId,
@@ -64,7 +64,7 @@ describe('MangoClient', async () => {
         1.5,
         payer,
       );
-      group = await client.getMangoGroup(groupKey);
+      group = await client.getEntropyGroup(groupKey);
     });
 
     it('should successfully update the cache', async () => {
@@ -74,21 +74,21 @@ describe('MangoClient', async () => {
 
       await client.cacheRootBanks(
         group.publicKey,
-        group.mangoCache,
+        group.entropyCache,
         rootBankPks,
         payer,
       );
     });
   });
 
-  describe.skip('initMangoAccount, deposit, and withdraw', async () => {
-    let group: MangoGroup;
+  describe.skip('initEntropyAccount, deposit, and withdraw', async () => {
+    let group: EntropyGroup;
     let user: Account;
-    let mangoAccount: MangoAccount;
+    let entropyAccount: EntropyAccount;
     let userTokenAcc: Account;
 
     before(async () => {
-      const groupKey = await client.initMangoGroup(
+      const groupKey = await client.initEntropyGroup(
         Test.USDCMint,
         Test.MSRMMint,
         Test.DexProgramId,
@@ -99,11 +99,11 @@ describe('MangoClient', async () => {
         1.5,
         payer,
       );
-      group = await client.getMangoGroup(groupKey);
+      group = await client.getEntropyGroup(groupKey);
       user = await Test.createAccount(connection, 5);
-      const mangoAccountPk = await client.initMangoAccount(group, user);
-      mangoAccount = await client.getMangoAccount(
-        mangoAccountPk,
+      const entropyAccountPk = await client.initEntropyAccount(group, user);
+      entropyAccount = await client.getEntropyAccount(
+        entropyAccountPk,
         Test.DexProgramId,
       );
     });
@@ -120,7 +120,7 @@ describe('MangoClient', async () => {
 
         await client.deposit(
           group,
-          mangoAccount,
+          entropyAccount,
           user,
           group.tokens[QUOTE_INDEX].rootBank,
           usdcRootBank.nodeBanks[0],

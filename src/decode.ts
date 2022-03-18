@@ -1,8 +1,8 @@
-import { MangoInstructionLayout } from '.';
+import { EntropyInstructionLayout } from '.';
 
 const ins = process.env.INS!;
 const data = Buffer.from(ins, 'hex');
-const decoded = MangoInstructionLayout.decode(data, 0);
+const decoded = EntropyInstructionLayout.decode(data, 0);
 
 console.log(decoded);
 
