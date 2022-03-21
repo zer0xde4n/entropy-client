@@ -874,6 +874,12 @@ yargs(hideBin(process.argv)).command(
       .option('exp', {
         type: 'number',
       })
+      .option('version', {
+        type: 'number',
+      })
+      .option('lmSizeShift', {
+        type: 'number',
+      })
 
       .option(...clusterDesc)
       .option(...configDesc)
@@ -915,7 +921,16 @@ yargs(hideBin(process.argv)).command(
     if (exp !== undefined && !Number.isInteger(exp)) {
       throw new Error('exp must be an integer');
     }
-    await client.changePerpMarketParams(
+    const version = getNumberOrUndef(args, 'version');
+    if (exp !== undefined && !Number.isInteger(exp)) {
+      throw new Error('version must be an integer');
+    }
+    const lmSizeShift = getNumberOrUndef(args, 'lmSizeShift');
+    if (exp !== undefined && !Number.isInteger(exp)) {
+      throw new Error('lmSizeShift must be an integer');
+    }
+    console.log(args);
+    await client.changePerpMarketParams2(
       entropyGroup,
       perpMarket,
       account,
@@ -929,6 +944,8 @@ yargs(hideBin(process.argv)).command(
       getNumberOrUndef(args, 'target_period_length'),
       mngoPerPeriod,
       exp,
+      version,
+      lmSizeShift
     );
     // await sleep(2000);
     // perpMarket = await client.getPerpMarket(

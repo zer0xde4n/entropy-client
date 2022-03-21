@@ -266,7 +266,7 @@ export default class PerpMarket {
         lmi.mngoPerPeriod.toNumber() / Math.pow(10, 6)
       ).toFixed(2)}`,
       `periodProgress: ${progress * 100}%`,
-      `estPeriodEnd: ${new Date(est * 1000).toISOString()}`,
+      // `estPeriodEnd: ${new Date(est * 1000).toISOString()}`,
       `mngoVault: ${this.mngoVault.toString()}`,
     ];
 
