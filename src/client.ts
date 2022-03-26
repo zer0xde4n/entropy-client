@@ -230,7 +230,7 @@ export class EntropyClient {
     transaction: Transaction,
     payer: Account | WalletAdapter | Keypair,
     additionalSigners: Account[],
-    timeout: number | null = 30000,
+    timeout: number | null = 60000,
     confirmLevel: TransactionConfirmationStatus = 'processed',
     marketName?: string | null
   ): Promise<TransactionSignature> {
@@ -264,7 +264,7 @@ export class EntropyClient {
 
     let done = false;
 
-    let retrySleep = 15000;
+    let retrySleep = 5000;
     (async () => {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {

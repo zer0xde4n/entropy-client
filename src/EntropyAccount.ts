@@ -859,21 +859,21 @@ export default class EntropyAccount {
     const lines: string[] = [];
     lines.push('EntropyAccount ' + this.publicKey.toBase58());
     lines.push('Owner: ' + this.owner.toBase58());
-    lines.push(
-      'Maint Health Ratio: ' +
-        this.getHealthRatio(entropyGroup, cache, 'Maint').toFixed(4),
-    );
-    lines.push(
-      'Maint Health: ' + this.getHealth(entropyGroup, cache, 'Maint').toFixed(4),
-    );
-    lines.push(
-      'Init Health: ' + this.getHealth(entropyGroup, cache, 'Init').toFixed(4),
-    );
+    // lines.push(
+    //   'Maint Health Ratio: ' +
+    //     this.getHealthRatio(entropyGroup, cache, 'Maint').toFixed(4),
+    // );
+    // lines.push(
+    //   'Maint Health: ' + this.getHealth(entropyGroup, cache, 'Maint').toFixed(4),
+    // );
+    // lines.push(
+    //   'Init Health: ' + this.getHealth(entropyGroup, cache, 'Init').toFixed(4),
+    // );
     lines.push('Equity: ' + this.computeValue(entropyGroup, cache).toFixed(4));
-    lines.push('isBankrupt: ' + this.isBankrupt);
-    lines.push('beingLiquidated: ' + this.beingLiquidated);
+    // lines.push('isBankrupt: ' + this.isBankrupt);
+    // lines.push('beingLiquidated: ' + this.beingLiquidated);
 
-    lines.push('Spot:');
+    // lines.push('Spot:');
     lines.push('Token: Net Balance / Base In Orders / Quote In Orders');
 
     const quoteAdj = new BN(10).pow(
