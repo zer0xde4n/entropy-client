@@ -1,6 +1,6 @@
 {
   "name": "@friktion-labs/entropy-client",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Client to interact with Entropy Markets on Solana",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",
@@ -13,6 +13,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
+    "release": "git add package.json && git commit --allow-empty -F 'new sdk' && npm publish",
+    "bump": "yarn version patch && yarn release",
     "build-docs": "yarn typedoc src/index.ts",
     "cli": "ts-node src/cli.ts",
     "checkMarginBaskets": "ts-node src/checkMarginBaskets.ts",
