@@ -1,0 +1,3 @@
+yarn bump
+npm publish
+
