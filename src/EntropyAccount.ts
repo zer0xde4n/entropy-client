@@ -17,6 +17,7 @@ import {
   splitOpenOrders,
   zeroKey,
 } from './utils';
+
 import RootBank from './RootBank';
 import BN from 'bn.js';
 import EntropyGroup from './EntropyGroup';
@@ -498,6 +499,31 @@ export default class EntropyAccount {
     return health;
   }
 
+  getHealthFromComponentsUnweighted(
+    mangoGroup: EntropyGroup,
+    mangoCache: EntropyCache,
+    spot: I80F48[],
+    perps: I80F48[],
+    quote: I80F48,
+  ): I80F48 {
+    const health = quote;
+    for (let i = 0; i < mangoGroup.numOracles; i++) {
+      console.log('curr health = ', health.toString());
+      
+      const price = mangoCache.priceCache[i].price;
+      const spotHealth = spot[i]
+        .mul(price)
+      const perpHealth = perps[i]
+        .mul(price)
+
+        console.log('spot health = ', spotHealth.toString());
+        console.log('perp health = ', perpHealth.toString());
+        health.iadd(spotHealth).iadd(perpHealth);
+    }
+
+    return health;
+  }
+
   getHealthsFromComponents(
     entropyGroup: EntropyGroup,
     entropyCache: EntropyCache,
@@ -686,6 +712,25 @@ export default class EntropyAccount {
       perps,
       quote,
       healthType,
+    );
+    return health;
+  }
+
+
+  getHealthUnweighted(
+    mangoGroup: EntropyGroup,
+    mangoCache: EntropyCache,
+  ): I80F48 {
+    const { spot, perps, quote } = this.getHealthComponents(
+      mangoGroup,
+      mangoCache,
+    );
+    const health = this.getHealthFromComponentsUnweighted(
+      mangoGroup,
+      mangoCache,
+      spot,
+      perps,
+      quote,
     );
     return health;
   }
