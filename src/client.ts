@@ -230,7 +230,7 @@ export class EntropyClient {
     transaction: Transaction,
     payer: Account | WalletAdapter | Keypair,
     additionalSigners: Account[],
-    timeout: number | null = 60000,
+    timeout: number | null = 30000,
     confirmLevel: TransactionConfirmationStatus = 'processed',
     marketName?: string | null
   ): Promise<TransactionSignature> {
@@ -260,21 +260,23 @@ export class EntropyClient {
 
     if (!timeout) return txid;
 
-    console.log(new Date().toISOString(), `${marketName} Started awaiting confirmation for txid: `,txid,' size:', rawTransaction.length);
+    console.log(new Date().toISOString(), `${marketName} Started awaiting confirmation for txid: `, txid, ' size:', rawTransaction.length);
 
     let done = false;
-
-    let retrySleep = 5000;
+    let retryCount = 0;
+    let retrySleep = 1000;
     (async () => {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {
+        retryCount += 1;
         await sleep(retrySleep);
         console.log(new Date().toISOString(), `${marketName}: sending tx `, txid);
+        console.log("Retry Count: ", retryCount);
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
-        if (retrySleep <= 6000) {
-          retrySleep = retrySleep * 2;
+        if (retrySleep <= 15000) {
+          retrySleep = retrySleep * 1.5;
         }
       }
     })();
@@ -305,7 +307,7 @@ export class EntropyClient {
             if (line.startsWith('Program log: ')) {
               throw new EntropyError({
                 message:
-                new Date().toISOString() + `${marketName} Transaction failed: ` + line.slice('Program log: '.length),
+                  new Date().toISOString() + `${marketName} Transaction failed: ` + line.slice('Program log: '.length),
                 txid,
               });
             }
@@ -316,8 +318,9 @@ export class EntropyClient {
           txid,
         });
       }
-      throw new EntropyError({ message: new Date().toISOString() + ' Transaction failed', txid
-     });
+      throw new EntropyError({
+        message: new Date().toISOString() + ' Transaction failed', txid
+      });
     } finally {
       done = true;
     }
@@ -1231,10 +1234,10 @@ export class EntropyClient {
     if (bookSideInfo) {
       const bookSide = bookSideInfo.data
         ? new BookSide(
-            side === 'buy' ? perpMarket.asks : perpMarket.bids,
-            perpMarket,
-            BookSideLayout.decode(bookSideInfo.data),
-          )
+          side === 'buy' ? perpMarket.asks : perpMarket.bids,
+          perpMarket,
+          BookSideLayout.decode(bookSideInfo.data),
+        )
         : [];
       const accounts: Set<string> = new Set();
       accounts.add(entropyAccount.publicKey.toBase58());
@@ -1665,7 +1668,7 @@ export class EntropyClient {
     transaction.add(placeOrderInstruction);
 
     if (spotMarketIndex > 0) {
-      console.log(new Date().toISOString(), 
+      console.log(new Date().toISOString(),
         spotMarketIndex - 1,
         entropyAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
@@ -1682,7 +1685,7 @@ export class EntropyClient {
     entropyAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
     entropyAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(new Date().toISOString(), 
+    console.log(new Date().toISOString(),
       spotMarketIndex,
       entropyAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
@@ -1879,7 +1882,7 @@ export class EntropyClient {
     // and if it failed then we already exited before this line
     entropyAccount.spotOpenOrders[spotMarketIndex] = marketOpenOrdersKey;
     entropyAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(new Date().toISOString(), 
+    console.log(new Date().toISOString(),
       spotMarketIndex,
       entropyAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       marketOpenOrdersKey.toBase58(),
@@ -2037,8 +2040,8 @@ export class EntropyClient {
 
       if (
         openOrdersAccount.quoteTokenFree.toNumber() +
-          openOrdersAccount['referrerRebatesAccrued'].toNumber() ===
-          0 &&
+        openOrdersAccount['referrerRebatesAccrued'].toNumber() ===
+        0 &&
         openOrdersAccount.baseTokenFree.toNumber() === 0
       ) {
         continue;
@@ -3424,7 +3427,7 @@ export class EntropyClient {
     transaction.add(placeOrderInstruction);
 
     if (spotMarketIndex > 0) {
-      console.log(new Date().toISOString(), 
+      console.log(new Date().toISOString(),
         spotMarketIndex - 1,
         entropyAccount.spotOpenOrders[spotMarketIndex - 1].toBase58(),
         openOrdersKeys[spotMarketIndex - 1].pubkey.toBase58(),
@@ -3440,7 +3443,7 @@ export class EntropyClient {
     entropyAccount.spotOpenOrders[spotMarketIndex] =
       openOrdersKeys[spotMarketIndex].pubkey;
     entropyAccount.inMarginBasket[spotMarketIndex] = true;
-    console.log(new Date().toISOString(), 
+    console.log(new Date().toISOString(),
       spotMarketIndex,
       entropyAccount.spotOpenOrders[spotMarketIndex].toBase58(),
       openOrdersKeys[spotMarketIndex].pubkey.toBase58(),
@@ -3511,10 +3514,10 @@ export class EntropyClient {
     if (bookSideInfo) {
       const bookSide = bookSideInfo.data
         ? new BookSide(
-            side === 'buy' ? perpMarket.asks : perpMarket.bids,
-            perpMarket,
-            BookSideLayout.decode(bookSideInfo.data),
-          )
+          side === 'buy' ? perpMarket.asks : perpMarket.bids,
+          perpMarket,
+          BookSideLayout.decode(bookSideInfo.data),
+        )
         : [];
       const accounts: Set<string> = new Set();
       accounts.add(entropyAccount.publicKey.toBase58());
@@ -3596,7 +3599,7 @@ export class EntropyClient {
 
     const nativeTriggerPrice = I80F48.fromNumber(
       triggerPrice *
-        Math.pow(10, perpMarket.quoteDecimals - perpMarket.baseDecimals),
+      Math.pow(10, perpMarket.quoteDecimals - perpMarket.baseDecimals),
     );
     const openOrders = entropyAccount.spotOpenOrders.filter(
       (pk, i) => entropyAccount.inMarginBasket[i],
