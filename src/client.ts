@@ -150,7 +150,7 @@ export class EntropyClient {
     transactions: Transaction[],
     payer: Account | WalletAdapter,
     additionalSigners: Account[],
-    timeout = 30000,
+    timeout = 60000,
     confirmLevel: TransactionConfirmationStatus = 'confirmed',
   ): Promise<TransactionSignature[]> {
     return await Promise.all(
@@ -264,7 +264,7 @@ export class EntropyClient {
 
     let done = false;
     let retryCount = 0;
-    let retrySleep = 1000;
+    let retrySleep = 2000;
     (async () => {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {
@@ -275,8 +275,8 @@ export class EntropyClient {
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
-        if (retrySleep <= 15000) {
-          retrySleep = retrySleep * 1.5;
+        if (retrySleep <= 40000) {
+          retrySleep += retrySleep;
         }
       }
     })();
