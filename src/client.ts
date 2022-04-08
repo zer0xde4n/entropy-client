@@ -275,9 +275,6 @@ export class EntropyClient {
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
-        if (retrySleep <= 40000) {
-          retrySleep += retrySleep;
-        }
       }
     })();
 
