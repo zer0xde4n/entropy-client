@@ -508,7 +508,6 @@ export default class EntropyAccount {
   ): I80F48 {
     const health = quote;
     for (let i = 0; i < mangoGroup.numOracles; i++) {
-      console.log('curr health = ', health.toString());
       
       const price = mangoCache.priceCache[i].price;
       const spotHealth = spot[i]
@@ -516,8 +515,6 @@ export default class EntropyAccount {
       const perpHealth = perps[i]
         .mul(price)
 
-        console.log('spot health = ', spotHealth.toString());
-        console.log('perp health = ', perpHealth.toString());
         health.iadd(spotHealth).iadd(perpHealth);
     }
 
