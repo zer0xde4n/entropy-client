@@ -38,7 +38,7 @@
 //   ) as GroupConfig;
 //   const connection = new Connection(
 //     'https://api.devnet.solana.com',
-//     'processed' as Commitment,
+//     'confirmed' as Commitment,
 //   );
 //   const client = new EntropyClient(connection, groupConfig.entropyProgramId);
 //   const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
@@ -50,22 +50,22 @@
 //     );
 
 //   console.log("ADDING PERP MARKET...");
-//   client.addPerpMarket(entropyGroup, 
-//       oracle, 
-//       new PublicKey("Bb9bsTQa1bGEtQ5KagGkvSHyuLqDWumFUcRqFusFNJWC"), 
-//       owner, 
-//       10, 
-//       10, 
-//       0.05, 
-//       0.05, 
-//       0, 
-//       0.01, 
-//       0.01, 
-//       10, 
-//       25, 
-//       0.05, 
-//       5, 
-//       0, 
+//   client.addPerpMarket(entropyGroup,
+//       oracle,
+//       new PublicKey("Bb9bsTQa1bGEtQ5KagGkvSHyuLqDWumFUcRqFusFNJWC"),
+//       owner,
+//       10,
+//       10,
+//       0.05,
+//       0.05,
+//       0,
+//       0.01,
+//       0.01,
+//       10,
+//       25,
+//       0.05,
+//       5,
+//       0,
 //       0);
 // }
 

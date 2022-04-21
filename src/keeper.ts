@@ -65,7 +65,7 @@ const payer = new Account(
 );
 const connection = new Connection(
   config.cluster_urls[cluster],
-  'processed' as Commitment,
+  'confirmed' as Commitment,
 );
 console.log("DEVNET RPC: ", process.env.DEVNET_ENDPOINT_URL)
 const client = new EntropyClient(connection, entropyProgramId);

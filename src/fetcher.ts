@@ -37,7 +37,7 @@ export class Fetcher {
 
     const connection = new Connection(
       process.env.ENDPOINT_URL || config.cluster_urls[cluster],
-      'processed' as Commitment,
+      'confirmed' as Commitment,
     );
     const client = new EntropyClient(connection, entropyProgramId);
     const entropyGroup = await client.getEntropyGroup(entropyGroupKey);

@@ -28,7 +28,7 @@ async function testStopLoss() {
   );
   const connection = new Connection(
     config.cluster_urls[cluster],
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
 
   const testGroup = new TestGroup();

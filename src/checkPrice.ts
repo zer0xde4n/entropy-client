@@ -31,7 +31,7 @@ async function checkPrice() {
   ) as GroupConfig;
   const connection = new Connection(
     'https://api.devnet.solana.com',
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
   const client = new EntropyClient(connection, groupConfig.entropyProgramId);
   const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
@@ -41,7 +41,7 @@ async function checkPrice() {
   console.log('tokens: ', entropyGroup.tokens);
   // console.log('spot markets: ', entropyGroup.spotMarkets);
   // console.log('perp markets: ', entropyGroup.perpMarkets);
-  
+
   // load group & market
   const perpMarketConfig = getMarketByBaseSymbolAndKind(
     groupConfig,

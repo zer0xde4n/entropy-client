@@ -26,7 +26,7 @@ async function testMaxCompute() {
   );
   const connection = new Connection(
     config.cluster_urls[cluster],
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
 
   const client = new EntropyClient(connection, entropyProgramId);

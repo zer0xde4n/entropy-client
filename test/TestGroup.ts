@@ -151,7 +151,7 @@ export default class TestGroup {
     );
     this.connection = new Connection(
       config.cluster_urls[cluster],
-      'processed' as Commitment,
+      'confirmed' as Commitment,
     );
 
     this.client = new EntropyClient(this.connection, this.entropyProgramId);
