@@ -36,6 +36,8 @@ export default class EntropyGroup {
   srmVault!: PublicKey;
   msrmVault!: PublicKey;
   feesVault!: PublicKey;
+  maxMangoAccounts!: number;
+  numMangoAccounts!: number;
   validInterval!: number[];
 
   rootBankAccounts: (RootBank | undefined)[];

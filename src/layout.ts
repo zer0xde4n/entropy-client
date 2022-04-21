@@ -811,7 +811,9 @@ export const EntropyGroupLayout = struct([
   publicKeyLayout('srmVault'),
   publicKeyLayout('msrmVault'),
   publicKeyLayout('feesVault'),
-  seq(u8(), 32, 'padding'),
+  u32('maxMangoAccounts'),
+  u32('numMangoAccounts'),
+  seq(u8(), 24, 'padding'),
 ]);
 /** @internal */
 export const EntropyAccountLayout = struct([

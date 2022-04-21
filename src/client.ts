@@ -114,6 +114,7 @@ import {
 } from '@solana/spl-token';
 import EntropyGroup from './EntropyGroup';
 import { EntropyError, TimeoutError } from '.';
+import { makeChangeMaxEntropyAccountsInstruction } from './instruction';
 
 export const getUnixTs = () => {
   return new Date().getTime() / 1000;
@@ -264,7 +265,7 @@ export class EntropyClient {
 
     let done = false;
     let retryCount = 0;
-    let retrySleep = 2000;
+    const retrySleep = 2000;
     (async () => {
       // TODO - make sure this works well on mainnet
       while (!done && getUnixTs() - startTime < timeout / 1000) {
@@ -1019,6 +1020,26 @@ export class EntropyClient {
     }
 
     return await this.sendTransaction(transaction, owner, additionalSigners);
+  }
+
+  async changeMaxAccounts(
+    entropyGroupPk: PublicKey,
+    admin: Account,
+    numAccounts: BN
+  ) {
+    console.log('num accounts = ', numAccounts.toString());
+    const instruction = makeChangeMaxEntropyAccountsInstruction(
+      this.programId,
+      entropyGroupPk,
+      admin.publicKey,
+      numAccounts,
+    );
+
+    const transaction = new Transaction();
+    transaction.add(instruction);
+
+    const additionalSigners = [];
+    return await this.sendTransaction(transaction, admin, additionalSigners);
   }
 
   /**

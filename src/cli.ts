@@ -33,6 +33,8 @@ import { QUOTE_INDEX } from './layout';
 import { Coder } from '@project-serum/anchor';
 import idl from './entropy_logs.json';
 import { getMarketIndexBySymbol } from '.';
+import changeMaxAccounts from './commands/changeMaxAccounts';
+import { BN } from 'bn.js';
 
 const clusterDesc: [string, Options] = [
   'cluster',
@@ -257,6 +259,38 @@ yargs(hideBin(process.argv)).command(
       group,
       args.symbol as string,
       args.value as number,
+    );
+    process.exit(0);
+  },
+).argv;
+
+
+yargs(hideBin(process.argv)).command(
+  'change-max-accounts <group> <symbol> <value>',
+  'set stub oracle to given value',
+  (y) => {
+    return y
+      .positional(...groupDesc)
+      .positional('num_accounts', {
+        describe: 'new # max accounts',
+        type: 'number',
+      })
+      .option(...clusterDesc)
+      .option(...configDesc)
+      .option(...keypairDesc);
+  },
+  async (args) => {
+    console.log('change_max_accounts', args);
+    const account = readKeypair(args.keypair as string);
+    const config = readConfig(args.config as string);
+    const cluster = args.cluster as Cluster;
+    const connection = openConnection(config, cluster);
+    const group = config.getGroup(cluster, args.group as string) as GroupConfig;
+    await changeMaxAccounts(
+      connection,
+      account,
+      group,
+      new BN(args.value as string)
     );
     process.exit(0);
   },
