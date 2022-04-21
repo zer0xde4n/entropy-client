@@ -225,13 +225,13 @@ export class EntropyClient {
    * @param transaction
    * @param payer
    * @param additionalSigners
-   * @param timeout Retries sending the transaction and trying to confirm it until the given timeout. Defaults to 30000ms. Passing null will disable the transaction confirmation check and always return success.
+   * @param timeout Retries sending the transaction and trying to confirm it until the given timeout. Defaults to 60000ms. Passing null will disable the transaction confirmation check and always return success.
    */
   async sendTransaction(
     transaction: Transaction,
     payer: Account | WalletAdapter | Keypair,
     additionalSigners: Account[],
-    timeout: number | null = 30000,
+    timeout: number | null = 60000,
     confirmLevel: TransactionConfirmationStatus = 'processed',
     marketName?: string | null
   ): Promise<TransactionSignature> {
@@ -329,7 +329,7 @@ export class EntropyClient {
 
   async sendSignedTransaction({
     signedTransaction,
-    timeout = 30000,
+    timeout = 60000,
     confirmLevel = 'processed',
   }: {
     signedTransaction: Transaction;

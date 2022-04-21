@@ -32,7 +32,7 @@ async function examplePerp() {
   ) as GroupConfig;
   const connection = new Connection(
     'https://api.devnet.solana.com',
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
   const client = new EntropyClient(connection, groupConfig.entropyProgramId);
   const entropyGroup = await client.getEntropyGroup(groupConfig.publicKey);
@@ -43,7 +43,7 @@ async function examplePerp() {
     'SOL',
     'perp',
   );
-  
+
   const perpMarket = await entropyGroup.loadPerpMarket(
     connection,
     perpMarketConfig.marketIndex,

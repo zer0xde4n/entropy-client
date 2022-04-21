@@ -57,7 +57,7 @@ async function mm() {
 
   const connection = new Connection(
     process.env.ENDPOINT_URL || config.cluster_urls[cluster],
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
   const client = new EntropyClient(connection, entropyProgramId);
 

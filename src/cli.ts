@@ -73,7 +73,7 @@ const symbolDesc: [string, PositionalOptions] = [
 function openConnection(config: Config, cluster: Cluster) {
   return new Connection(
     config.cluster_urls[cluster],
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
 }
 
@@ -441,7 +441,7 @@ yargs(hideBin(process.argv)).command(
         describe: 'optimal interest rate param',
         default: 0.06,
         type: 'number',
-      })    
+      })
       .option('max_rate', {
         describe: 'max interest rate param',
         default: 1.5,

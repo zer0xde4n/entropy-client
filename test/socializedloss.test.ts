@@ -37,7 +37,7 @@ async function testSocializedLoss() {
   );
   const connection = new Connection(
     config.cluster_urls[cluster],
-    'processed' as Commitment,
+    'confirmed' as Commitment,
   );
 
   const client = new EntropyClient(connection, entropyProgramId);
@@ -79,7 +79,7 @@ async function testSocializedLoss() {
       1000,
     );
 
-   
+
     await liqorAccount.reload(connection);
     console.log('LIQOR', liqorAccount.publicKey.toBase58());
 
@@ -114,7 +114,7 @@ async function testSocializedLoss() {
       const banks = await rootBank.loadNodeBanks(connection);
 
       await sleep(sleepTime);
-    
+
     console.log('Resetting oracle');
       await client.setStubOracle(
         entropyGroupKey,
@@ -202,7 +202,7 @@ async function testSocializedLoss() {
         console.log('Account was not bankrupt');
     }
     await sleep(5000);
-    
+
     rootBanks = await entropyGroup.loadRootBanks(connection);
     assetRootBank = rootBanks[5];
     liabRootBank = rootBanks[QUOTE_INDEX];
