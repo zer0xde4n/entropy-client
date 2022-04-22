@@ -11,7 +11,7 @@ import { Order } from '@project-serum/serum/lib/market';
 import { I80F48, ZERO_I80F48 } from './fixednum';
 import { PerpOrder, PerpOrderType, ZERO_BN } from '.';
 
-const SERUM_FEES_VAULT = new PublicKey("APBH71knizgDfsY3kYkv9PDhTizaJXywC1XNNRLwdKHQ");
+// const SERUM_FEES_VAULT = new PublicKey("APBH71knizgDfsY3kYkv9PDhTizaJXywC1XNNRLwdKHQ");
 
 export function makeInitEntropyGroupInstruction(
   programId: PublicKey,
@@ -1298,7 +1298,7 @@ export function makeSettleFeesInstruction(
     { isSigner: false, isWritable: true, pubkey: nodeBankPk },
     { isSigner: false, isWritable: true, pubkey: bankVaultPk },
     { isSigner: false, isWritable: true, pubkey: feesVaultPk },
-    { isSigner: false, isWritable: true, pubkey: SERUM_FEES_VAULT},
+    // { isSigner: false, isWritable: true, pubkey: SERUM_FEES_VAULT},
     { isSigner: false, isWritable: false, pubkey: signerPk },
     { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
   ];
