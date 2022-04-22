@@ -2,7 +2,25 @@
 
 Typescript client library for interacting with Entropy Markets, inspired heavily by Entropy Markets.
 
+
 ## Installation
+
+``` 
+git clone git@github:Friktion-Labs/entropy-client
+cd entropy-client
+yarn
+```
+
+## Running the keeper
+
+
+```
+Ensure that a private keypair with SOL is in ~/.solana/config/entropy-mainnet-authority.json
+yarn keeper
+```
+
+
+## Package Installation
 
 Using npm:
 
