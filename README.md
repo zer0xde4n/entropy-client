@@ -17,7 +17,7 @@ https://mattmazur.com/2021/11/18/using-a-phantom-wallet-address-with-the-solana-
 
 Ensure a SOL funded private keypair is in this file location: 
 ```
-~/.solana/config/entropy-mainnet-authority.json
+~/.config/solana/entropy-mainnet-authority.json
 ```
 
 Run the keeper
