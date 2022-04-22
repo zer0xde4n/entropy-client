@@ -13,9 +13,9 @@ yarn
 
 ## Running the keeper
 
+Ensure that a private keypair with SOL is in ~/.solana/config/entropy-mainnet-authority.json
 
 ```
-Ensure that a private keypair with SOL is in ~/.solana/config/entropy-mainnet-authority.json
 yarn keeper
 ```
 
