@@ -6,7 +6,7 @@ Typescript client library for interacting with Entropy Markets, inspired heavily
 ## Installation
 
 ``` 
-git clone git@github:Friktion-Labs/entropy-client
+git clone git@github.com:Friktion-Labs/entropy-client
 cd entropy-client
 yarn
 ```
