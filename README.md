@@ -12,9 +12,15 @@ yarn
 ```
 
 ## Running the keeper
+Adding Phantom Wallet into Solana CLI:
+https://mattmazur.com/2021/11/18/using-a-phantom-wallet-address-with-the-solana-cli/
 
-Ensure a SOL funded private keypair is in this file location: ~/.solana/config/entropy-mainnet-authority.json
+Ensure a SOL funded private keypair is in this file location: 
+```
+~/.solana/config/entropy-mainnet-authority.json
+```
 
+Run the keeper
 ```
 yarn keeper
 ```
