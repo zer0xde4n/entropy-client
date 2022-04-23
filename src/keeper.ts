@@ -26,7 +26,7 @@ import { PerpEventQueueLayout } from './layout';
 import { EntropyGroup, PerpMarket, promiseUndef } from '.';
 import PerpEventQueue from './PerpEventQueue';
 import { PROGRAM_LAYOUT_VERSIONS } from '@project-serum/serum/lib/tokens_and_markets';
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config({ path: '.env' });
 
 let lastRootBankCacheUpdate = 0;
 const groupName = process.env.GROUP || 'mainnet.2';
@@ -63,8 +63,10 @@ const payer = new Account(
     payerJsonFile
   ),
 );
+const RPC_ENDPOINT = (process.env.RPC_ENDPOINT || config.cluster_urls[cluster])
+console.log("RPC_ENDPOINT USED", RPC_ENDPOINT);
 const connection = new Connection(
-  config.cluster_urls[cluster],
+  RPC_ENDPOINT,
   'confirmed' as Commitment,
 );
 console.log("DEVNET RPC: ", process.env.DEVNET_ENDPOINT_URL)
