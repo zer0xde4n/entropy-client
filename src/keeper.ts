@@ -72,7 +72,7 @@ const connection = new Connection(
 console.log("DEVNET RPC: ", process.env.DEVNET_ENDPOINT_URL)
 const client = new EntropyClient(connection, entropyProgramId);
 
-async function main() {
+export async function main() {
   if (!groupIds) {
     throw new Error(`Group ${groupName} not found`);
   }
